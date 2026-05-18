@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GemRunner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8fafc;
+    --panel: #ffffff;
+    --panel2: #f1f5f9;
+    --accent: #2563eb;
+    --accent-dim: #1d4ed8;
+    --border: #e2e8f0;
+    --border-light: #cbd5e1;
+    --text: #0f172a;
+    --text-dim: #334155;
+    --text-muted: #64748b;
+    --ok: #16a34a;
+    --err: #dc2626;
+    --warn: #d97706;
+    --info: #0284c7;
+    --radius: 8px;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel2: #334155;
+    --accent: #3b82f6;
+    --accent-dim: #2563eb;
+    --border: #334155;
+    --border-light: #475569;
+    --text: #f8fafc;
+    --text-dim: #e2e8f0;
+    --text-muted: #94a3b8;
+    --ok: #22c55e;
+    --err: #ef4444;
+    --warn: #f59e0b;
+    --info: #38bdf8;
+  }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .app-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .app-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .app-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .app-version {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  .status-pill.idle .status-dot { background: var(--text-muted); }
+  .status-pill.idle { color: var(--text-muted); }
+
+  .status-pill.running .status-dot {
+    background: var(--accent);
+    animation: pulse 1s ease-in-out infinite;
+  }
+  .status-pill.running { color: var(--accent); border-color: var(--accent-dim); }
+
+  .status-pill.success .status-dot { background: var(--ok); animation: none; }
+  .status-pill.success { color: var(--ok); border-color: #bbf7d0; background: #f0fdf4; }
+
+  .status-pill.error .status-dot { background: var(--err); animation: none; }
+  .status-pill.error { color: var(--err); border-color: #fecaca; background: #fef2f2; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+    min-height: 0;
+  }
+
+  .col {
+    padding: 20px;
+    padding-bottom: 60px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .col:last-child { border-right: none; }
+
+  .col-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .col-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* FORM ELEMENTS */
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 200px;
+    line-height: 1.5;
+  }
+
+  .field select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+
+  .field-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .field-row .field {
+    flex: 1;
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
+  .btn-primary:active { background: var(--accent-dim); }
+
+  .btn-primary:disabled {
+    background: var(--border);
+    border-color: var(--border);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: var(--panel2);
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+
+  .btn-secondary:hover { border-color: var(--border-light); color: var(--text); background: var(--bg); }
+  .btn-secondary.active { border-color: var(--accent); color: var(--accent); }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .btn-ghost:hover { color: var(--text-dim); border-color: var(--border-light); }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  /* SPINNER */
+  .spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .spinner.show { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* LAST RESPONSE */
+  .response-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    min-height: 60px;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  .response-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .response-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .response-status {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+
+  .response-status.ok { background: #f0fdf4; color: var(--ok); border: 1px solid #bbf7d0; }
+  .response-status.err { background: #fef2f2; color: var(--err); border: 1px solid #fecaca; }
+
+  /* SCHEDULE PANEL */
+  .schedule-toggle {
+    margin-bottom: 14px;
+  }
+
+  .schedule-panel {
+    display: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-top: 10px;
+  }
+
+  .schedule-panel.show { display: block; }
+
+  .mode-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    background: var(--panel);
+    padding: 3px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .mode-tab {
+    flex: 1;
+    padding: 5px 8px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .mode-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .mode-tab:hover:not(.active) { color: var(--text-dim); }
+
+  .mode-content { display: none; }
+  .mode-content.show { display: block; }
+
+  .day-picker {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .day-btn {
+    width: 32px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .day-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .schedule-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .scheduled-jobs {
+    margin-top: 10px;
+  }
+
+  .job-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    background: var(--panel);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .job-item .job-remove {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .job-item .job-remove:hover { color: var(--err); }
+
+  .job-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok);
+    animation: pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  /* ACTIVITY LOG */
+  .logpanel {
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+
+  .log-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .log-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .stat-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .stat .n {
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  .stat.total .n { color: var(--text-dim); }
+  .stat.success .n { color: var(--ok); }
+  .stat.error .n { color: var(--err); }
+
+  .log-body {
+    height: 200px;
+    overflow-y: auto;
+    padding: 6px 0;
+    background: var(--bg);
+  }
+
+  .log-body::-webkit-scrollbar { width: 5px; }
+  .log-body::-webkit-scrollbar-track { background: var(--bg); }
+  .log-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .log-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 4px 20px;
+    font-size: 11px;
+    line-height: 1.5;
+    border-bottom: 1px solid transparent;
+    transition: background 0.1s;
+  }
+
+  .log-row:hover { background: var(--panel); }
+
+  .log-time {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    font-size: 10px;
+    margin-top: 1px;
+    min-width: 72px;
+  }
+
+  .log-badge {
+    flex-shrink: 0;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-top: 2px;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .log-badge.ok { background: #f0fdf4; color: var(--ok); border: 1px solid #bbf7d0; }
+  .log-badge.ok::before { content: '✅ '; }
+  .log-badge.err { background: #fef2f2; color: var(--err); border: 1px solid #fecaca; }
+  .log-badge.err::before { content: '❌ '; }
+  .log-badge.warn { background: #fffbeb; color: var(--warn); border: 1px solid #fde68a; }
+  .log-badge.warn::before { content: '⚠️ '; }
+  .log-badge.info { background: #f0f9ff; color: var(--info); border: 1px solid #bae6fd; }
+  .log-badge.info::before { content: 'ℹ️ '; }
+
+  .log-msg { color: var(--text-dim); flex: 1; word-break: break-word; }
+  .log-msg .hl { color: var(--text); }
+
+  .log-empty {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+
+  /* THEMED CHECKBOX */
+  .field-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex: 1;
+    user-select: none;
+  }
+
+  .field-checkbox:hover {
+    border-color: var(--border-light);
+    background: var(--bg);
+  }
+
+  .field-checkbox.active {
+    border-color: var(--accent);
+    background: #eff6ff;
+    color: var(--accent);
+  }
+
+  .field-checkbox label {
+    margin: 0 !important;
+    cursor: pointer;
+    flex: 1;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  /* TOAST NOTIFICATIONS */
+  #toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toast-in 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    pointer-events: auto;
+  }
+
+  @keyframes toast-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .toast.success { border-left-color: var(--ok); }
+  .toast.error { border-left-color: var(--err); }
+  .toast.info { border-left-color: var(--info); }
+  .toast.fade-out {
+    animation: toast-out 0.3s ease forwards;
+  }
+
+  @keyframes toast-out {
+    to { transform: translateX(100%); opacity: 0; }
+  }
+
+  /* COLLAPSIBLE PANELS */
+  .col-title.collapsible {
+    cursor: pointer;
+    user-select: none;
+  }
+  .col-title.collapsible::before {
+    content: '▼';
+    font-size: 8px;
+    margin-right: 8px;
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .col-title.collapsible.collapsed::before {
+    transform: rotate(-90deg);
+  }
+  .collapse-content {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+  .collapsed + .collapse-content {
+    max-height: 0;
+  }
+
+  /* HISTORY LIST */
+  .history-list {
+    margin-top: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel2);
+    display: none;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .history-list.show { display: block; }
+  .history-item {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item:hover { background: var(--panel); }
+  .history-time { color: var(--text-muted); }
+  .history-code { font-weight: 700; }
+  .history-code.ok { color: var(--ok); }
+  .history-code.err { color: var(--err); }
+  .json-key { color: var(--accent); }
+  .json-string { color: var(--ok); }
+  .json-number { color: var(--warn); }
+  .json-boolean { color: var(--info); }
+  .json-null { color: var(--text-muted); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="app-icon">💎</div>
+    <span class="app-name">GemRunner</span>
+    <span class="app-version">v1.2</span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <button class="btn btn-ghost" onclick="toggleTheme()" style="padding: 5px 10px; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🌓</button>
+    <div class="status-pill idle" id="statusPill">
+      <div class="status-dot"></div>
+      <span id="statusText">Idle</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN NAVIGATION -->
+<div class="mode-tabs" style="margin: 0; border-radius: 0; border-left: none; border-right: none; padding: 4px 20px; background: var(--panel2);">
+  <button class="mode-tab active" onclick="switchPage('online')" id="nav-online" style="max-width: 150px;">🌐 ONLINE MODE</button>
+  <button class="mode-tab" onclick="switchPage('local')" id="nav-local" style="max-width: 150px;">💻 LOCAL MODE</button>
+</div>
+
+<!-- ONLINE SECTION -->
+<div id="section-online" class="main">
+  <!-- LEFT: ACTION & LOG -->
+  <div class="col">
+    <div class="col-title">🌐 Online Configuration</div>
+
+    <div class="field">
+      <label>🔗 API Endpoint (V2)</label>
+      <input type="url" id="webhookUrl" value="https://app.gemlogin.io/api/v2/execscript" placeholder="https://app.gemlogin.io/api/v2/execscript" autocomplete="off" spellcheck="false" oninput="generateJson()">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>📡 Method</label>
+        <select id="httpMethod" onchange="generateJson()">
+          <option value="POST">POST</option>
+          <option value="GET">GET</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>⏳ Timeout (sec)</label>
+        <input type="number" id="timeout" value="30" min="1" max="300" oninput="generateJson()">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>🔑 Authorization (Bearer Token)</label>
+      <textarea id="headers" placeholder='{"Authorization": "Bearer TOKEN"}' style="min-height: 60px;" oninput="generateJson()"></textarea>
+    </div>
+
+    <div class="divider"></div>
+    <div class="field">
+      <label>📦 Request Body (JSON)</label>
+      <textarea id="requestBody" placeholder='{"profileId": "...", "workflow_id": "..."}'></textarea>
+    </div>
+
+    <div class="divider"></div>
+    <div class="col-title">⚡ Execution Control</div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runNow('online')">
+        <div class="spinner" id="spinner-online"></div>
+        <span>▶ Run Online API</span>
+      </button>
+      <button class="btn btn-secondary" onclick="copyAsCurl('online')">
+        🖥️ cURL
+      </button>
+      <button class="btn btn-secondary" onclick="toggleSchedule()">
+        ⏱ Schedule
+      </button>
+      <button class="btn btn-ghost" onclick="applyTemplate('online')">
+        💎 Template
+      </button>
+    </div>
+
+    <!-- SCHEDULE PANEL -->
+    <div class="schedule-panel" id="schedulePanel">
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="setMode('once')" id="tab-once">Once</button>
+        <button class="mode-tab" onclick="setMode('daily')" id="tab-daily">Daily</button>
+        <button class="mode-tab" onclick="setMode('interval')" id="tab-interval">Interval</button>
+      </div>
+      <div class="mode-content show" id="mode-once">
+        <div class="field"><label>Date & Time</label><input type="datetime-local" id="onceDateTime"></div>
+      </div>
+      <div class="mode-content" id="mode-daily">
+        <div class="field"><label>Time</label><input type="time" id="dailyTime" value="09:00"></div>
+        <div class="day-picker">
+          <button class="day-btn selected" data-day="0">Sun</button><button class="day-btn selected" data-day="1">Mon</button>
+          <button class="day-btn selected" data-day="2">Tue</button><button class="day-btn selected" data-day="3">Wed</button>
+          <button class="day-btn selected" data-day="4">Thu</button><button class="day-btn selected" data-day="5">Fri</button>
+          <button class="day-btn" data-day="6">Sat</button>
+        </div>
+      </div>
+      <div class="mode-content" id="mode-interval">
+        <div class="field"><label>Every N minutes</label><input type="number" id="intervalMin" value="15"></div>
+      </div>
+      <div class="schedule-actions"><button class="btn btn-primary" onclick="addSchedule()" style="font-size:11px;">+ Add Job</button></div>
+    </div>
+    <div class="scheduled-jobs" id="scheduledJobs"></div>
+
+    <div class="divider"></div>
+    <div class="col-title">🔖 Presets</div>
+    <div class="field-row" style="margin-bottom:10px">
+      <input type="text" id="presetName" placeholder="Preset name..." style="flex:2">
+      <button class="btn btn-secondary" onclick="savePreset('online')" style="flex:1">💾 Save</button>
+    </div>
+    <div class="scheduled-jobs" id="savedPresets"></div>
+    <div class="divider"></div>
+    <div class="response-meta">
+      <span class="response-label">📝 Last Response</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span class="response-status" id="responseStatus-online" style="display:none"></span>
+        <button class="btn btn-ghost" onclick="toggleHistory('online')" style="padding: 2px 8px; height: 22px;">📜 History</button>
+        <button class="btn btn-ghost" onclick="copyResponse('online')" style="padding: 2px 8px; height: 22px;">📋 Copy</button>
+      </div>
+    </div>
+    <div class="history-list" id="historyList-online"></div>
+    <div class="response-box" id="responseBox-online">No response yet.</div>
+  </div>
+
+  <!-- RIGHT: BUILDER & PRESETS -->
+  <div class="col">
+    <div class="col-title collapsible" onclick="toggleCollapse(this)">🏗 GemConfig Builder</div>
+    <div class="collapse-content">
+      <div class="field">
+        <label>🔑 Token</label>
+        <input type="text" id="builder-token" value="KUHpWwz6J7BvNe2Qfs1337jfbNo73Y9UMUYsJmvuku816GFFswlaS5GTfMteZzR7" oninput="generateJson()">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>📱 Device ID</label>
+          <input type="text" id="builder-deviceId" value="BD91C1BA2F82F614D9D85F8DC1C67BCD" oninput="generateJson()">
+        </div>
+        <div class="field">
+          <label>🆔 Soft ID</label>
+          <input type="text" id="builder-softId" value="1" oninput="generateJson()">
+        </div>
+      </div>
+      <div class="field">
+        <label>📑 Workflow ID</label>
+        <input type="text" id="builder-workflowId" value="ilwQFeoilvgTBVXXo_Cik" oninput="generateJson()">
+      </div>
+      <div class="field">
+        <label>👥 Profile IDs (One per line)</label>
+        <textarea id="builder-profileIds" style="min-height: 80px;" oninput="generateJson()">699d8a53145c9356697df060</textarea>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="col-title collapsible" onclick="toggleCollapse(this)">
+      ⚙ Script Parameters 
+      <button class="btn btn-ghost" onclick="event.stopPropagation(); toggleScriptMgr()" style="margin-left:auto; padding: 2px 8px; height: 22px;">⚙ Manage</button>
+    </div>
+
+    <div class="collapse-content">
+      <!-- SCRIPT MANAGER PANEL -->
+      <div id="scriptMgrPanel" style="display:none; background: var(--panel2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 14px;">
+        <div style="font-size: 10px; font-weight: 700; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase;">📥 Import .gemlogin Script</div>
+        <input type="file" id="scriptFileInput" accept=".gemlogin" style="display:none" onchange="processScriptImport(this)">
+        <button class="btn btn-secondary" style="width:100%; margin-bottom: 10px; font-size: 11px;" onclick="document.getElementById('scriptFileInput').click()">
+          📁 Select .gemlogin file
+        </button>
+        <div id="customScriptList" style="max-height: 120px; overflow-y: auto;">
+          <!-- Custom scripts listed here -->
+        </div>
+      </div>
+
+      <div class="field">
+        <label>📜 Select Script Template</label>
+        <select id="script-selector" onchange="renderScriptParameters(); generateJson();">
+          <option value="none">-- Select Script --</option>
+        </select>
+      </div>
+      <div id="dynamic-parameters-container">
+        <!-- Dynamic parameters will be injected here -->
+      </div>
+    </div>
+
+    <div class="col-title collapsible" onclick="toggleCollapse(this)">
+      🛠 GemConfig Parameters
+      <button class="btn btn-ghost" onclick="event.stopPropagation(); resetBuilder()" style="margin-left:auto; padding: 2px 8px; height: 22px;">🗑 Reset</button>
+    </div>
+    <div class="collapse-content">
+      <div class="field-row">
+        <div class="field"><label>🧵 Threads</label><input type="number" id="gc-threads" value="1" oninput="generateJson()"></div>
+        <div class="field"><label>📐 Scale</label><input type="number" step="0.1" id="gc-scale" value="0.5" oninput="generateJson()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>📊 Row</label><input type="number" id="gc-row" value="3" oninput="generateJson()"></div>
+        <div class="field"><label>📊 Column</label><input type="number" id="gc-column" value="5" oninput="generateJson()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>⏳ Timeout</label><input type="number" id="gc-timeout" value="1000" oninput="generateJson()"></div>
+        <div class="field"><label>🔁 Repeat</label><input type="number" id="gc-repeat" value="1" oninput="generateJson()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>📏 Width</label><input type="number" id="gc-width" value="180" oninput="generateJson()"></div>
+        <div class="field"><label>📏 Height</label><input type="number" id="gc-height" value="180" oninput="generateJson()"></div>
+      </div>
+      <div class="field-row" style="margin-bottom:10px;">
+        <div class="field-checkbox" id="cont-gc-useProxy">
+          <input type="checkbox" id="gc-useProxy" onchange="toggleActive(this); generateJson()">
+          <label for="gc-useProxy">🌐 Use Proxy</label>
+        </div>
+        <div style="flex:1"></div>
+      </div>
+      <div class="field">
+        <label>💬 Chrome Argument</label>
+        <input type="text" id="gc-chromeArgument" value="" oninput="generateJson()">
+      </div>
+      <div class="field-row" style="margin-bottom:10px;">
+        <div class="field-checkbox" id="cont-gc-customSize">
+          <input type="checkbox" id="gc-customSize" onchange="toggleActive(this); generateJson()">
+          <label for="gc-customSize">🖼 Custom Size</label>
+        </div>
+        <div class="field-checkbox" id="cont-gc-autoScale">
+          <input type="checkbox" id="gc-autoScale" onchange="toggleActive(this); generateJson()">
+          <label for="gc-autoScale">⚖ Auto Scale</label>
+        </div>
+      </div>
+      <div class="field-row" style="margin-bottom:10px;">
+        <div class="field-checkbox active" id="cont-gc-checIp">
+          <input type="checkbox" id="gc-checIp" checked onchange="toggleActive(this); generateJson()">
+          <label for="gc-checIp">🔍 Check IP</label>
+        </div>
+        <div class="field-checkbox active" id="cont-gc-showError">
+          <input type="checkbox" id="gc-showError" checked onchange="toggleActive(this); generateJson()">
+          <label for="gc-showError">⚠️ Show Error</label>
+        </div>
+      </div>
+      <div class="field-row" style="margin-bottom:10px;">
+        <div class="field-checkbox active" id="cont-builder-closeBrowser">
+          <input type="checkbox" id="builder-closeBrowser" checked onchange="toggleActive(this); generateJson()">
+          <label for="builder-closeBrowser">❌ Close Browser</label>
+        </div>
+        <div style="flex:1"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="generateJson()" style="width:100%; margin-bottom: 20px; background: var(--info); border-color: var(--info);">
+      🔄 Update Request Body
+    </button>
+
+  </div>
+</div>
+
+<!-- LOCAL SECTION -->
+<div id="section-local" class="main" style="display:none">
+  <!-- LEFT: CONFIG -->
+  <div class="col">
+    <div class="col-title">💻 Local Browser Control</div>
+
+    <div class="field">
+      <label>🔗 Local API URL</label>
+      <input type="url" id="localUrl" value="http://localhost:1010/api/v2/execscript" placeholder="http://localhost:1010/api/v2/execscript">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>📡 Method</label>
+        <select id="localMethod">
+          <option value="POST">POST</option>
+          <option value="GET">GET</option>
+        </select>
+      </div>
+      <div class="field" style="flex:0.5">
+        <label>⏳ Timeout</label>
+        <input type="number" id="localTimeout" value="30">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>📦 Parameters (JSON Body)</label>
+      <textarea id="localBody" style="min-height: 200px;" placeholder='{"profileId": "..."}'></textarea>
+    </div>
+  </div>
+
+  <!-- RIGHT: ACTIONS & LOG -->
+  <div class="col">
+    <div class="col-title">🚀 Local Execution</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runNow('local')" style="background: var(--ok); border-color: var(--ok);">
+        <div class="spinner" id="spinner-local"></div>
+        <span>🚀 Execute Local Command</span>
+      </button>
+      <button class="btn btn-secondary" onclick="copyAsCurl('local')">
+        🖥️ cURL
+      </button>
+      <button class="btn btn-secondary" onclick="applyTemplate('local')">
+        📋 Load Template
+      </button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="col-title">🔖 Local Presets</div>
+    <div class="field-row" style="margin-bottom:10px">
+      <input type="text" id="presetNameLocal" placeholder="Local preset name..." style="flex:2">
+      <button class="btn btn-secondary" onclick="savePreset('local')" style="flex:1">💾 Save</button>
+    </div>
+    <div class="scheduled-jobs" id="savedPresetsLocal"></div>
+
+    <div class="divider"></div>
+    <div class="response-meta">
+      <span class="response-label">📝 Local Response</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span class="response-status" id="responseStatus-local" style="display:none"></span>
+        <button class="btn btn-ghost" onclick="toggleHistory('local')" style="padding: 2px 8px; height: 22px;">📜 History</button>
+        <button class="btn btn-ghost" onclick="copyResponse('local')" style="padding: 2px 8px; height: 22px;">📋 Copy</button>
+      </div>
+    </div>
+    <div class="history-list" id="historyList-local"></div>
+    <div class="response-box" id="responseBox-local" style="min-height: 150px;">No response yet.</div>
+  </div>
+</div>
+
+
+
+<!-- ACTIVITY LOG PANEL (Bottom) -->
+<div class="logpanel">
+  <div class="log-header">
+    <div class="log-header-left">
+      <span class="log-title">Activity Log</span>
+      <div class="stat-group">
+        <div class="stat total">Total: <span class="n" id="statTotal">0</span></div>
+        <div class="stat success">OK: <span class="n" id="statOk">0</span></div>
+        <div class="stat error">ERR: <span class="n" id="statErr">0</span></div>
+      </div>
+    </div>
+    <button class="btn btn-ghost" onclick="clearLog()">✕ Clear</button>
+  </div>
+  <div class="log-body" id="logBody">
+    <div class="log-empty" id="logEmpty">No activity yet. Run a command to see logs.</div>
+  </div>
+</div>
+
+<script>
+// ─── THEME ────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const target = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', target);
+  localStorage.setItem('gr_theme', target);
+}
+
+function copyAsCurl(mode) {
+  let url, method, body, headers;
+  if (mode === 'online') {
+    url = document.getElementById('webhookUrl').value.trim();
+    method = document.getElementById('httpMethod').value;
+    body = document.getElementById('requestBody').value.trim();
+    const h = document.getElementById('headers').value.trim();
+    headers = { 'Content-Type': 'application/json' };
+    if (h) { try { Object.assign(headers, JSON.parse(h)); } catch(e) {} }
+  } else {
+    url = document.getElementById('localUrl').value.trim();
+    method = document.getElementById('localMethod').value;
+    body = document.getElementById('localBody').value.trim();
+    headers = { 'Content-Type': 'application/json' };
+  }
+
+  let curl = `curl -X ${method} "${url}"`;
+  for (const [k, v] of Object.entries(headers)) {
+    curl += ` -H "${k}: ${v}"`;
+  }
+  if (method !== 'GET' && body) {
+    curl += ` -d '${body.replace(/'/g, "'\\''")}'`;
+  }
+
+  navigator.clipboard.writeText(curl).then(() => {
+    showToast('cURL command copied', 'success');
+  });
+}
+
+function toggleCollapse(el) {
+  el.classList.toggle('collapsed');
+}
+
+function toggleHistory(mode) {
+  const list = document.getElementById(`historyList-${mode}`);
+  list.classList.toggle('show');
+  renderHistory(mode);
+}
+
+function renderHistory(mode) {
+  const container = document.getElementById(`historyList-${mode}`);
+  const items = state.responseHistory[mode];
+  if (!items.length) {
+    container.innerHTML = '<div style="padding:10px; font-size:10px; color:var(--text-muted); text-align:center;">No history yet.</div>';
+    return;
+  }
+  container.innerHTML = items.map((item, idx) => `
+    <div class="history-item" onclick="loadHistoryItem('${mode}', ${idx})">
+      <span class="history-time">${item.time}</span>
+      <span class="history-code ${item.type}">${item.status || '??'}</span>
+    </div>
+  `).join('');
+}
+
+function loadHistoryItem(mode, idx) {
+  const item = state.responseHistory[mode][idx];
+  showResponse(item.raw, item.type, item.status, mode, false); // false = don't push to history again
+  showToast('Response loaded from history', 'info');
+}
+
+function syntaxHighlight(json) {
+  if (typeof json !== 'string') {
+    json = JSON.stringify(json, undefined, 2);
+  }
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+    let cls = 'json-number';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = 'json-key';
+      } else {
+        cls = 'json-string';
+      }
+    } else if (/true|false/.test(match)) {
+      cls = 'json-boolean';
+    } else if (/null/.test(match)) {
+      cls = 'json-null';
+    }
+    return '<span class="' + cls + '">' + match + '</span>';
+  });
+}
+
+function copyResponse(mode) {
+  const box = document.getElementById(`responseBox-${mode}`);
+  if (!box || box.textContent === 'No response yet.') return;
+  
+  const text = box.innerText || box.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`Response copied (${mode})`, 'success');
+    addLog('info', `✅ Response copied to clipboard (${mode}).`);
+  }).catch(err => {
+    showToast('Failed to copy', 'error');
+    addLog('err', '❌ Failed to copy response.');
+  });
+}
+
+function resetBuilder() {
+  if (!confirm('Reset all parameters to default?')) return;
+  
+  document.getElementById('gc-threads').value = 1;
+  document.getElementById('gc-scale').value = 0.5;
+  document.getElementById('gc-row').value = 3;
+  document.getElementById('gc-column').value = 5;
+  document.getElementById('gc-timeout').value = 1000;
+  document.getElementById('gc-repeat').value = 1;
+  document.getElementById('gc-width').value = 180;
+  document.getElementById('gc-height').value = 180;
+  document.getElementById('gc-chromeArgument').value = '';
+  
+  const cbs = ['gc-useProxy', 'gc-customSize', 'gc-autoScale', 'gc-checIp', 'gc-showError', 'builder-closeBrowser'];
+  cbs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.checked = (id === 'gc-checIp' || id === 'gc-showError' || id === 'builder-closeBrowser');
+      toggleActive(el);
+    }
+  });
+  
+  generateJson();
+  showToast('Parameters reset', 'info');
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  logs: [],
+  stats: { total: 0, ok: 0, err: 0 },
+  jobs: [],
+  jobIdCounter: 0,
+  scheduleMode: 'once',
+  scheduleOpen: false,
+  page: 'online', // 'online' or 'local'
+  presets: JSON.parse(localStorage.getItem('gr_presets_online') || '[]'),
+  presetsLocal: JSON.parse(localStorage.getItem('gr_presets_local') || '[]'),
+  responseHistory: { online: [], local: [] }
+};
+
+// ─── SCRIPT TEMPLATES ──────────────────────────────────────────────────────────
+const BUILT_IN_TEMPLATES = {};
+
+let customTemplates = JSON.parse(localStorage.getItem('gr_custom_scripts') || '{}');
+
+function getActiveTemplates() {
+  return { ...BUILT_IN_TEMPLATES, ...customTemplates };
+}
+
+function toggleScriptMgr() {
+  const panel = document.getElementById('scriptMgrPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  renderCustomScriptList();
+}
+
+function processScriptImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const scriptName = data.name || file.name.replace('.gemlogin', '');
+      
+      // Find manual trigger node
+      const nodes = data.drawflow.nodes;
+      const trigger = nodes.find(n => n.type === 'BlockBasic' && n.data.type === 'manual');
+      
+      if (!trigger || !trigger.data.parameters) {
+        addLog('err', `Could not find manual trigger parameters in "${scriptName}".`);
+        return;
+      }
+
+      // Convert parameters to template format
+      const params = trigger.data.parameters
+        .filter(p => p.type !== 'divider')
+        .map(p => ({
+          name: p.name || p.id,
+          label: p.label || p.name || p.id,
+          type: p.type === 'checkbox' ? 'checkbox' : (p.type === 'number' ? 'number' : 'string'),
+          defaultValue: p.defaultValue
+        }));
+
+      customTemplates[scriptName] = params;
+      localStorage.setItem('gr_custom_scripts', JSON.stringify(customTemplates));
+      
+      updateScriptSelector();
+      renderCustomScriptList();
+      addLog('ok', `Script "${scriptName}" imported successfully.`);
+      input.value = '';
+    } catch (err) {
+      addLog('err', 'Failed to parse .gemlogin file.');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function deleteCustomScript(name) {
+  if (confirm(`Delete script "${name}"?`)) {
+    delete customTemplates[name];
+    localStorage.setItem('gr_custom_scripts', JSON.stringify(customTemplates));
+    updateScriptSelector();
+    renderCustomScriptList();
+    addLog('warn', `Script "${name}" deleted.`);
+  }
+}
+
+function updateScriptSelector() {
+  const selector = document.getElementById('script-selector');
+  const currentVal = selector.value;
+  const templates = getActiveTemplates();
+  
+  selector.innerHTML = '<option value="none">-- Select Script --</option>';
+  Object.keys(templates).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    selector.appendChild(opt);
+  });
+  
+  if (templates[currentVal]) {
+    selector.value = currentVal;
+  }
+}
+
+function renderCustomScriptList() {
+  const list = document.getElementById('customScriptList');
+  const keys = Object.keys(customTemplates);
+  
+  if (keys.length === 0) {
+    list.innerHTML = '<div style="font-size:10px; color:var(--text-muted); text-align:center; padding:5px;">No custom scripts.</div>';
+    return;
+  }
+
+  list.innerHTML = keys.map(name => `
+    <div class="job-item" style="margin-bottom: 4px; padding: 4px 8px;">
+      <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px;">${name}</span>
+      <button class="job-remove" onclick="deleteCustomScript('${name}')">×</button>
+    </div>
+  `).join('');
+}
+
+function toggleActive(el) {
+  const container = el.closest('.field-checkbox');
+  if (container) {
+    container.classList.toggle('active', el.checked);
+  }
+}
+
+// Global click handler for themed checkboxes
+document.addEventListener('click', (e) => {
+  const container = e.target.closest('.field-checkbox');
+  if (container && e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+    const input = container.querySelector('input');
+    if (input) {
+      input.click();
+    }
+  }
+});
+
+function renderScriptParameters() {
+  const scriptName = document.getElementById('script-selector').value;
+  const templates = getActiveTemplates();
+  const container = document.getElementById('dynamic-parameters-container');
+  container.innerHTML = '';
+
+  if (scriptName === 'none' || !templates[scriptName]) return;
+
+  let currentRow = null;
+  templates[scriptName].forEach((param, index) => {
+    if (param.type === 'checkbox') {
+      if (!currentRow) {
+        currentRow = document.createElement('div');
+        currentRow.className = 'field-row';
+        currentRow.style.marginBottom = '10px';
+        container.appendChild(currentRow);
+      }
+
+      const itemWrapper = document.createElement('div');
+      itemWrapper.className = 'field-checkbox';
+      if (param.defaultValue) itemWrapper.classList.add('active');
+
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.id = `sp-${param.name}`;
+      input.checked = param.defaultValue;
+      input.onchange = function() { toggleActive(this); generateJson(); };
+
+      const label = document.createElement('label');
+      label.textContent = param.label;
+      label.setAttribute('for', `sp-${param.name}`);
+
+      itemWrapper.appendChild(input);
+      itemWrapper.appendChild(label);
+      currentRow.appendChild(itemWrapper);
+
+      if (currentRow.children.length === 2) {
+        currentRow = null;
+      }
+    } else {
+      currentRow = null;
+      const fieldDiv = document.createElement('div');
+      fieldDiv.className = 'field';
+
+      const label = document.createElement('label');
+      label.textContent = param.label;
+
+      const input = document.createElement('input');
+      input.type = param.type === 'number' ? 'number' : 'text';
+      input.id = `sp-${param.name}`;
+      input.value = param.defaultValue;
+      input.oninput = generateJson;
+
+      fieldDiv.appendChild(label);
+      fieldDiv.appendChild(input);
+      container.appendChild(fieldDiv);
+    }
+  });
+}
+// ─── PAGE SWITCHING ───────────────────────────────────────────────────────────
+function switchPage(p) {
+  state.page = p;
+  document.getElementById('section-online').style.display = p === 'online' ? '' : 'none';
+  document.getElementById('section-local').style.display = p === 'local' ? '' : 'none';
+  document.getElementById('nav-online').classList.toggle('active', p === 'online');
+  document.getElementById('nav-local').classList.toggle('active', p === 'local');
+  addLog('info', `Switched to ${p.toUpperCase()} mode.`);
+}
+
+// ─── STATUS ───────────────────────────────────────────────────────────────────
+function setStatus(s) {
+  const pill = document.getElementById('statusPill');
+  const txt  = document.getElementById('statusText');
+  if (!pill || !txt) return;
+  pill.className = 'status-pill ' + s;
+  txt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ─── LOG ──────────────────────────────────────────────────────────────────────
+function addLog(badge, msg) {
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-GB', { hour12: false });
+  state.logs.push({ time, badge, msg });
+
+  state.stats.total++;
+  if (badge === 'ok')  state.stats.ok++;
+  if (badge === 'err') state.stats.err++;
+
+  renderLog(true);
+  updateStats();
+}
+
+function renderLog(appendOnly = false) {
+  const body = document.getElementById('logBody');
+  if (!body) return;
+
+  if (state.logs.length === 0) {
+    body.innerHTML = '<div class="log-empty" id="logEmpty">No activity yet. Run a command to see logs.</div>';
+    return;
+  }
+
+  const empty = document.getElementById('logEmpty');
+  if (empty) empty.style.display = 'none';
+
+  if (appendOnly) {
+    const last = state.logs[state.logs.length - 1];
+    const row = createLogRow(last);
+    body.appendChild(row);
+  } else {
+    body.innerHTML = '';
+    state.logs.forEach(log => {
+      body.appendChild(createLogRow(log));
+    });
+  }
+  body.scrollTop = body.scrollHeight;
+}
+
+function createLogRow(log) {
+  const row = document.createElement('div');
+  row.className = 'log-row';
+  row.innerHTML = `
+    <span class="log-time">${log.time}</span>
+    <span class="log-badge ${log.badge}">${log.badge.toUpperCase()}</span>
+    <span class="log-msg">${escHtml(log.msg)}</span>`;
+  return row;
+}
+
+function clearLog() {
+  state.logs = [];
+  state.stats = { total: 0, ok: 0, err: 0 };
+  document.getElementById('logBody').innerHTML =
+    '<div class="log-empty" id="logEmpty">No activity yet. Run a command to see logs.</div>';
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = state.stats.total;
+  document.getElementById('statOk').textContent    = state.stats.ok;
+  document.getElementById('statErr').textContent   = state.stats.err;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── EXECUTION ────────────────────────────────────────────────────────────────
+async function runNow(mode) {
+  let url, method, body, headers, tSec;
+
+  if (mode === 'online') {
+    url     = document.getElementById('webhookUrl').value.trim();
+    method  = document.getElementById('httpMethod').value;
+    body    = document.getElementById('requestBody').value.trim();
+    const h = document.getElementById('headers').value.trim();
+    tSec    = parseInt(document.getElementById('timeout').value) || 30;
+
+    headers = { 'Content-Type': 'application/json' };
+    if (h) {
+      try { headers = { ...headers, ...JSON.parse(h) }; }
+      catch (e) { addLog('err', 'Invalid Online Headers JSON.'); return; }
+    }
+  } else {
+    url     = document.getElementById('localUrl').value.trim();
+    method  = document.getElementById('localMethod').value;
+    body    = document.getElementById('localBody').value.trim();
+    tSec    = parseInt(document.getElementById('localTimeout').value) || 30;
+    headers = { 'Content-Type': 'application/json' };
+  }
+
+  if (!url) { addLog('warn', 'Target URL is missing.'); return; }
+
+  // JSON Body Validation
+  if (method !== 'GET' && body) {
+    try { JSON.parse(body); }
+    catch (e) { addLog('err', `Invalid Request Body JSON in ${mode} mode.`); return; }
+  }
+
+  setRunning(true, mode);
+  setStatus('running');
+  addLog('info', `${method} → ${url}`);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), tSec * 1000);
+
+  const opts = {
+    method,
+    signal: controller.signal,
+    headers,
+    mode: 'cors' // Ensure CORS mode is explicit
+  };
+  if (method !== 'GET' && body) opts.body = body;
+
+  const t0 = Date.now();
+  try {
+    const res  = await fetch(url, opts);
+    clearTimeout(timer);
+    const ms   = Date.now() - t0;
+    const text = await res.text();
+    const truncated = text.length > 500 ? text.slice(0, 500) + '…' : text;
+
+    showResponse(truncated, res.ok ? 'ok' : 'err', res.status, mode);
+
+    if (res.ok) {
+      addLog('ok', `HTTP ${res.status} — ${ms}ms`);
+      setStatus('success');
+    } else {
+      addLog('err', `HTTP ${res.status} — ${ms}ms`);
+      setStatus('error');
+    }
+  } catch (e) {
+    clearTimeout(timer);
+    let msg = e.name === 'AbortError' ? `Timeout after ${tSec}s` : e.message;
+    if (e.message.includes('Failed to fetch')) {
+      msg += ' (CORS issue or Server offline?)';
+    }
+    addLog('err', msg);
+    showResponse(msg, 'err', null, mode);
+    setStatus('error');
+  } finally {
+    setRunning(false, mode);
+    setTimeout(() => {
+      // Only set to idle if not currently running another job
+      if (document.querySelectorAll('.spinner.show').length === 0) {
+        setStatus('idle');
+      }
+    }, 3000);
+  }
+}
+
+function setRunning(on, mode) {
+  const spinner = document.getElementById(`spinner-${mode}`);
+  if (spinner) spinner.className = on ? 'spinner show' : 'spinner';
+}
+
+function showResponse(text, type, code, mode, pushHistory = true) {
+  const box = document.getElementById(`responseBox-${mode}`);
+  const st = document.getElementById(`responseStatus-${mode}`);
+  
+  if (box) {
+    try {
+      const obj = JSON.parse(text);
+      box.innerHTML = syntaxHighlight(JSON.stringify(obj, null, 2));
+    } catch(e) {
+      box.textContent = text;
+    }
+  }
+  
+  if (st && code) {
+    st.style.display = '';
+    st.className = 'response-status ' + type;
+    st.textContent = code;
+  }
+
+  if (pushHistory && text) {
+    const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+    state.responseHistory[mode].unshift({ time, raw: text, type, status: code });
+    if (state.responseHistory[mode].length > 10) {
+      state.responseHistory[mode].pop();
+    }
+    const list = document.getElementById(`historyList-${mode}`);
+    if (list && list.classList.contains('show')) {
+      renderHistory(mode);
+    }
+  }
+}
+
+// ─── TEMPLATES ────────────────────────────────────────────────────────────────
+function applyTemplate(mode) {
+  if (mode === 'online') {
+    document.getElementById('headers').value = JSON.stringify({
+      "Authorization": "Bearer YOUR_TOKEN"
+    }, null, 2);
+    document.getElementById('requestBody').value = JSON.stringify({
+      "profileId": "YOUR_PROFILE_ID",
+      "workflow_id": "YOUR_WORKFLOW_ID",
+      "parameter": { "gemConfig": { "threads": 1 } }
+    }, null, 2);
+    addLog('info', 'Online template applied (including Header placeholder).');
+  } else {
+    document.getElementById('localBody').value = JSON.stringify({
+      "profileId": "YOUR_PROFILE_ID",
+      "script": "console.log('Hello from GemRunner Local');",
+      "vars": {}
+    }, null, 2);
+    addLog('info', 'Local template applied.');
+  }
+}
+
+// ─── PRESETS ──────────────────────────────────────────────────────────────────
+function savePreset(mode) {
+  const nameInput = mode === 'online' ? 'presetName' : 'presetNameLocal';
+  const name = document.getElementById(nameInput).value.trim();
+  if (!name) { showToast('Enter preset name', 'error'); return; }
+
+  let config = { name };
+  if (mode === 'online') {
+    config.url = document.getElementById('webhookUrl').value;
+    config.method = document.getElementById('httpMethod').value;
+    config.headers = document.getElementById('headers').value;
+    config.body = document.getElementById('requestBody').value;
+    state.presets = state.presets.filter(p => p.name !== name);
+    state.presets.push(config);
+    localStorage.setItem('gr_presets_online', JSON.stringify(state.presets));
+  } else {
+    config.url = document.getElementById('localUrl').value;
+    config.method = document.getElementById('localMethod').value;
+    config.body = document.getElementById('localBody').value;
+    config.timeout = document.getElementById('localTimeout').value;
+    state.presetsLocal = state.presetsLocal.filter(p => p.name !== name);
+    state.presetsLocal.push(config);
+    localStorage.setItem('gr_presets_local', JSON.stringify(state.presetsLocal));
+  }
+
+  showToast(`Preset "${name}" saved`, 'success');
+  addLog('info', `Preset "${name}" saved in ${mode} mode.`);
+  renderPresets();
+  document.getElementById(nameInput).value = '';
+}
+
+function loadPreset(name, mode) {
+  const p = (mode === 'online' ? state.presets : state.presetsLocal).find(p => p.name === name);
+  if (!p) return;
+
+  if (mode === 'online') {
+    document.getElementById('webhookUrl').value = p.url;
+    document.getElementById('httpMethod').value = p.method;
+    document.getElementById('headers').value = p.headers;
+    document.getElementById('requestBody').value = p.body;
+  } else {
+    document.getElementById('localUrl').value = p.url;
+    document.getElementById('localMethod').value = p.method;
+    document.getElementById('localBody').value = p.body;
+    document.getElementById('localTimeout').value = p.timeout || 30;
+  }
+  addLog('info', `Preset "${name}" loaded.`);
+  showToast(`Preset "${name}" loaded`, 'info');
+}
+
+function deletePreset(name, mode) {
+  if (confirm(`Delete preset "${name}"?`)) {
+    if (mode === 'online') {
+      state.presets = state.presets.filter(p => p.name !== name);
+      localStorage.setItem('gr_presets_online', JSON.stringify(state.presets));
+    } else {
+      state.presetsLocal = state.presetsLocal.filter(p => p.name !== name);
+      localStorage.setItem('gr_presets_local', JSON.stringify(state.presetsLocal));
+    }
+    renderPresets();
+    showToast('Preset deleted', 'info');
+    addLog('warn', `Preset "${name}" deleted.`);
+  }
+}
+
+function renderPresets() {
+  const renderList = (id, list, mode) => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    if (!list || !list.length) {
+      container.innerHTML = '<div style="font-size:10px;color:var(--text-muted);text-align:center;padding:10px;">No presets.</div>';
+      return;
+    }
+    container.innerHTML = list.map(p => {
+      const safeName = p.name.replace(/'/g, "\\'");
+      return `
+        <div class="job-item" style="cursor:pointer" onclick="loadPreset('${safeName}', '${mode}')">
+          <div class="status-dot" style="background:var(--info);width:6px;height:6px;animation:none;"></div>
+          <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(p.name)}</span>
+          <button class="job-remove" onclick="event.stopPropagation(); deletePreset('${safeName}', '${mode}')">×</button>
+        </div>`;
+    }).join('');
+  };
+  renderList('savedPresets', state.presets, 'online');
+  renderList('savedPresetsLocal', state.presetsLocal, 'local');
+}
+
+// ─── SCHEDULE ─────────────────────────────────────────────────────────────────
+function toggleSchedule() {
+  state.scheduleOpen = !state.scheduleOpen;
+  document.getElementById('schedulePanel').classList.toggle('show', state.scheduleOpen);
+}
+
+function setMode(m) {
+  state.scheduleMode = m;
+  ['once','daily','interval'].forEach(id => {
+    const content = document.getElementById('mode-' + id);
+    const tab = document.getElementById('tab-' + id);
+    if (content) content.classList.toggle('show', id === m);
+    if (tab) tab.classList.toggle('active', id === m);
+  });
+}
+
+document.querySelectorAll('.day-btn').forEach(btn => {
+  btn.addEventListener('click', () => btn.classList.toggle('selected'));
+});
+
+function addSchedule() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) { addLog('warn', 'Online URL is missing (Scheduling is only for Online mode).'); return; }
+
+  let label = '';
+  const id = ++state.jobIdCounter;
+  let timerId = null;
+  let type = '';
+
+  if (state.scheduleMode === 'once') {
+    const dt = document.getElementById('onceDateTime').value;
+    if (!dt) { addLog('warn', 'Date/Time not set.'); return; }
+    const target = new Date(dt).getTime();
+    const delay = target - Date.now();
+    if (delay < 0) { addLog('warn', 'Time is in the past.'); return; }
+
+    label = 'Once @ ' + new Date(dt).toLocaleString();
+    timerId = setTimeout(() => {
+      runNow('online');
+      removeJob(id);
+    }, delay);
+    type = 'timeout';
+
+  } else if (state.scheduleMode === 'daily') {
+    const timeStr = document.getElementById('dailyTime').value; // HH:mm
+    const selectedDays = Array.from(document.querySelectorAll('.day-btn.selected')).map(b => parseInt(b.dataset.day));
+    if (selectedDays.length === 0) { addLog('warn', 'Select at least one day.'); return; }
+
+    label = `Daily ${timeStr} [${selectedDays.map(d => ['S','M','T','W','T','F','S'][d]).join('')}]`;
+    let lastRun = '';
+
+    timerId = setInterval(() => {
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2,'0');
+      const m = now.getMinutes().toString().padStart(2,'0');
+      const curTime = `${h}:${m}`;
+      const curDay = now.getDay();
+
+      if (selectedDays.includes(curDay) && curTime === timeStr && lastRun !== curTime) {
+        lastRun = curTime;
+        runNow('online');
+      }
+      if (curTime !== timeStr) lastRun = ''; // Reset for next day
+    }, 30000); // Check every 30s
+    type = 'interval';
+
+  } else if (state.scheduleMode === 'interval') {
+    const mins = parseInt(document.getElementById('intervalMin').value) || 15;
+    if (mins < 1) return;
+    label = `Every ${mins} min`;
+    timerId = setInterval(() => runNow('online'), mins * 60000);
+    type = 'interval';
+  }
+
+  state.jobs.push({ id, label, timerId, type });
+  renderJobs();
+  addLog('info', `Scheduled: ${label}`);
+}
+
+function removeJob(id) {
+  const job = state.jobs.find(j => j.id === id);
+  if (job) {
+    if (job.type === 'timeout') clearTimeout(job.timerId);
+    else clearInterval(job.timerId);
+  }
+  state.jobs = state.jobs.filter(j => j.id !== id);
+  renderJobs();
+}
+
+function renderJobs() {
+  const container = document.getElementById('scheduledJobs');
+  if (!container) return;
+  if (state.jobs.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = state.jobs.map(j => `
+    <div class="job-item">
+      <div class="job-dot"></div>
+      <span style="flex:1">#${j.id} ${escHtml(j.label)}</span>
+      <button class="job-remove" onclick="removeJob(${j.id})">×</button>
+    </div>
+  `).join('');
+}
+
+function generateJson() {
+  const profileIds = document.getElementById('builder-profileIds').value
+    .split('\n')
+    .map(s => s.trim())
+    .filter(s => s !== '');
+
+  const gemConfig = {
+    "threads": parseInt(document.getElementById('gc-threads').value) || 1,
+    "scale": parseFloat(document.getElementById('gc-scale').value) || 0.5,
+    "row": parseInt(document.getElementById('gc-row').value) || 3,
+    "column": parseInt(document.getElementById('gc-column').value) || 5,
+    "timeout": parseInt(document.getElementById('gc-timeout').value) || 1000,
+    "repeatTimes": parseInt(document.getElementById('gc-repeat').value) || 1,
+    "width": parseInt(document.getElementById('gc-width').value) || 180,
+    "height": parseInt(document.getElementById('gc-height').value) || 180,
+    "customSize": document.getElementById('gc-customSize').checked,
+    "autoScale": document.getElementById('gc-autoScale').checked,
+    "useProxy": document.getElementById('gc-useProxy').checked ? "proxy" : "not_use",
+    "checIp": document.getElementById('gc-checIp').checked,
+    "showError": document.getElementById('gc-showError').checked,
+    "chromeArgument": document.getElementById('gc-chromeArgument').value
+  };
+
+  const parameters = { gemConfig };
+
+  // Harvest dynamic script parameters
+  const scriptName = document.getElementById('script-selector').value;
+  const templates = getActiveTemplates();
+  if (scriptName !== 'none' && templates[scriptName]) {
+    templates[scriptName].forEach(param => {
+      const el = document.getElementById(`sp-${param.name}`);
+      if (el) {
+        if (param.type === 'checkbox') {
+          parameters[param.name] = el.checked;
+        } else if (param.type === 'number') {
+          parameters[param.name] = parseInt(el.value) || 0;
+        } else {
+          parameters[param.name] = el.value;
+        }
+      }
+    });
+  }
+
+  const body = {
+    "token": document.getElementById('builder-token').value,
+    "device_id": document.getElementById('builder-deviceId').value,
+    "soft_id": document.getElementById('builder-softId').value,
+    "profile_id": profileIds,
+    "workflow_id": document.getElementById('builder-workflowId').value,
+    "parameter": parameters,
+    "close_browser": document.getElementById('builder-closeBrowser').checked
+  };
+
+  document.getElementById('requestBody').value = JSON.stringify(body, null, 2);
+  addLog('info', 'Request Body updated from Builder.');
+  saveAllInputs(); // Persistence
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 5);
+  document.getElementById('onceDateTime').value = now.toISOString().slice(0, 16);
+
+  updateScriptSelector(); // Populate the dropdown
+  loadAllInputs(); // Load saved data first
+  renderPresets();
+  addLog('info', 'GemRunner Ready (Configuration restored).');
+})();
+
+function saveAllInputs() {
+  const inputs = {
+    // Online Config
+    webhookUrl: document.getElementById('webhookUrl').value,
+    httpMethod: document.getElementById('httpMethod').value,
+    timeout: document.getElementById('timeout').value,
+    headers: document.getElementById('headers').value,
+
+    // Builder
+    token: document.getElementById('builder-token').value,
+    deviceId: document.getElementById('builder-deviceId').value,
+    softId: document.getElementById('builder-softId').value,
+    workflowId: document.getElementById('builder-workflowId').value,
+    profileIds: document.getElementById('builder-profileIds').value,
+    scriptSelector: document.getElementById('script-selector').value,
+
+    // GemConfig
+    threads: document.getElementById('gc-threads').value,
+    scale: document.getElementById('gc-scale').value,
+    row: document.getElementById('gc-row').value,
+    column: document.getElementById('gc-column').value,
+    gcTimeout: document.getElementById('gc-timeout').value,
+    repeat: document.getElementById('gc-repeat').value,
+    width: document.getElementById('gc-width').value,
+    height: document.getElementById('gc-height').value,
+    useProxy: document.getElementById('gc-useProxy').checked,
+    chromeArgument: document.getElementById('gc-chromeArgument').value,
+    customSize: document.getElementById('gc-customSize').checked,
+    autoScale: document.getElementById('gc-autoScale').checked,
+    checIp: document.getElementById('gc-checIp').checked,
+    showError: document.getElementById('gc-showError').checked,
+    closeBrowser: document.getElementById('builder-closeBrowser').checked,
+
+    // Dynamic Script Params
+    dynamicParams: {}
+  };
+
+  // Harvest dynamic script parameters values
+  const scriptName = inputs.scriptSelector;
+  const templates = getActiveTemplates();
+  if (scriptName !== 'none' && templates[scriptName]) {
+    templates[scriptName].forEach(param => {
+      const el = document.getElementById(`sp-${param.name}`);
+      if (el) {
+        inputs.dynamicParams[param.name] = (param.type === 'checkbox') ? el.checked : el.value;
+      }
+    });
+  }
+
+  localStorage.setItem('gr_config_v2', JSON.stringify(inputs));
+}
+
+function loadAllInputs() {
+  const saved = localStorage.getItem('gr_config_v2');
+  if (!saved) {
+    generateJson();
+    return;
+  }
+
+  try {
+    const data = JSON.parse(saved);
+
+    // Online Config
+    document.getElementById('webhookUrl').value = data.webhookUrl || '';
+    document.getElementById('httpMethod').value = data.httpMethod || 'POST';
+    document.getElementById('timeout').value = data.timeout || 30;
+    document.getElementById('headers').value = data.headers || '';
+
+    // Builder
+    document.getElementById('builder-token').value = data.token || '';
+    document.getElementById('builder-deviceId').value = data.deviceId || '';
+    document.getElementById('builder-softId').value = data.softId || '1';
+    document.getElementById('builder-workflowId').value = data.workflowId || '';
+    document.getElementById('builder-profileIds').value = data.profileIds || '';
+    document.getElementById('script-selector').value = data.scriptSelector || 'none';
+
+    // GemConfig
+    document.getElementById('gc-threads').value = data.threads || 1;
+    document.getElementById('gc-scale').value = data.scale || 0.5;
+    document.getElementById('gc-row').value = data.row || 3;
+    document.getElementById('gc-column').value = data.column || 5;
+    document.getElementById('gc-timeout').value = data.gcTimeout || 1000;
+    document.getElementById('gc-repeat').value = data.repeat || 1;
+    document.getElementById('gc-width').value = data.width || 180;
+    document.getElementById('gc-height').value = data.height || 180;
+    document.getElementById('gc-chromeArgument').value = data.chromeArgument || '';
+
+    // Checkboxes
+    const cbMap = {
+      'gc-useProxy': data.useProxy,
+      'gc-customSize': data.customSize,
+      'gc-autoScale': data.autoScale,
+      'gc-checIp': data.checIp,
+      'gc-showError': data.showError,
+      'builder-closeBrowser': data.closeBrowser
+    };
+
+    for (const [id, val] of Object.entries(cbMap)) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.checked = val;
+        toggleActive(el);
+      }
+    }
+
+    // Render script params then load their values
+    renderScriptParameters();
+    if (data.dynamicParams) {
+      for (const [name, val] of Object.entries(data.dynamicParams)) {
+        const el = document.getElementById(`sp-${name}`);
+        if (el) {
+          if (el.type === 'checkbox') {
+            el.checked = val;
+            toggleActive(el);
+          } else {
+            el.value = val;
+          }
+        }
+      }
+    }
+
+    generateJson(); // Final update to requestBody
+  } catch (e) {
+    console.error('Failed to load config', e);
+    generateJson();
+  }
+}
+</script>
+</body>
+</html>
