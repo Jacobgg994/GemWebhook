@@ -1043,6 +1043,71 @@
 
   .lib-pick-item-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
   .lib-pick-item-preview { font-size: 10px; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .lib-pick-item-chunks { font-size: 10px; color: var(--accent); margin-top: 3px; font-weight: 600; }
+
+  /* PICK OPTIONS BAR */
+  .pick-opts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+  }
+
+  .pick-opts-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pick-opts-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 80px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .pick-pill-group {
+    display: flex;
+    gap: 4px;
+  }
+
+  .pick-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s;
+  }
+
+  .pick-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .pick-pill:hover:not(.active) { color: var(--text); border-color: var(--border-light); }
+
+  .pick-seq-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+  }
 
   /* Inline pick button (in script parameters) */
   .param-pick-btn {
@@ -1470,12 +1535,31 @@
 
 <!-- PICK MODAL -->
 <div class="lib-modal-overlay" id="pickModal">
-  <div class="lib-modal">
+  <div class="lib-modal" style="max-width:560px;">
     <div class="lib-modal-header">
       <span class="lib-modal-title" id="pickModalTitle">Pick from Library</span>
       <button class="lib-modal-close" onclick="closeModal('pickModal')">×</button>
     </div>
     <div class="lib-modal-body">
+
+      <!-- Option Bar -->
+      <div class="pick-opts">
+        <div class="pick-opts-row">
+          <span class="pick-opts-label">📄 รูปแบบ</span>
+          <div class="pick-pill-group">
+            <button class="pick-pill active" id="pickFmt-line" onclick="setPickOpt('fmt','line')">🔤 ทีละบรรทัด</button>
+            <button class="pick-pill" id="pickFmt-pipe" onclick="setPickOpt('fmt','pipe')">📦 ชุด (| คั่น)</button>
+          </div>
+        </div>
+        <div class="pick-opts-row">
+          <span class="pick-opts-label">🎲 วิธีเลือก</span>
+          <div class="pick-pill-group">
+            <button class="pick-pill active" id="pickMode-random" onclick="setPickOpt('mode','random')">🔀 สุ่ม</button>
+            <button class="pick-pill" id="pickMode-seq" onclick="setPickOpt('mode','seq')">📋 เรียงลำดับ</button>
+          </div>
+        </div>
+      </div>
+
       <input class="lib-search" type="text" placeholder="🔍 Search..." oninput="filterPickList(this.value)" style="margin-bottom:0;">
       <div class="lib-pick-list" id="pickModalList" style="margin-top:10px;">
         <!-- Items rendered dynamically -->
@@ -2701,6 +2785,23 @@ function closeModal(id) {
 }
 
 // ─── PICK MODAL ──────────────────────────────────────────────────────────────
+let pickOpts = { fmt: 'line', mode: 'random' };  // current pick options
+let pickSeqIndex = {};  // { 'caption-3': 0, 'hashtag-7': 2, ... }
+
+function setPickOpt(key, val) {
+  pickOpts[key] = val;
+  // Update pill UI
+  if (key === 'fmt') {
+    document.getElementById('pickFmt-line').classList.toggle('active', val === 'line');
+    document.getElementById('pickFmt-pipe').classList.toggle('active', val === 'pipe');
+  } else {
+    document.getElementById('pickMode-random').classList.toggle('active', val === 'random');
+    document.getElementById('pickMode-seq').classList.toggle('active', val === 'seq');
+  }
+  // Re-render list to update chunk previews
+  renderPickList(pickAllItems);
+}
+
 async function openPickModal(targetInputId, type) {
   await initLibDB();
   pickTargetId = targetInputId;
@@ -2717,6 +2818,16 @@ async function openPickModal(targetInputId, type) {
   if (si) { si.value = ''; si.focus(); }
 }
 
+function getChunks(item) {
+  const raw = pickTargetType === 'hashtag' ? item.hashtags : item.content;
+  if (!raw) return [];
+  if (pickOpts.fmt === 'pipe') {
+    return raw.split('|').map(s => s.trim()).filter(Boolean);
+  } else {
+    return raw.split('\n').map(s => s.trim()).filter(Boolean);
+  }
+}
+
 function renderPickList(items) {
   const list = document.getElementById('pickModalList');
   if (!items.length) {
@@ -2724,10 +2835,31 @@ function renderPickList(items) {
     return;
   }
   list.innerHTML = items.map(item => {
-    const preview = pickTargetType === 'hashtag' ? item.hashtags : item.content;
+    const chunks = getChunks(item);
+    const seqKey = `${pickTargetType}-${item.id}`;
+    const curIdx = (pickSeqIndex[seqKey] || 0) % Math.max(chunks.length, 1);
+
+    let previewText = '';
+    let badgeHtml = '';
+    if (chunks.length <= 1) {
+      previewText = chunks[0] || '';
+    } else {
+      if (pickOpts.mode === 'random') {
+        previewText = `🎲 จะสุ่มจาก ${chunks.length} รายการ`;
+      } else {
+        previewText = chunks[curIdx] || '';
+        badgeHtml = `<span class="pick-seq-badge">#${curIdx + 1}/${chunks.length}</span>`;
+      }
+    }
+
+    const chunkInfo = chunks.length > 1
+      ? `<div class="lib-pick-item-chunks">${pickOpts.fmt === 'pipe' ? '📦' : '🔤'} ${chunks.length} ชุด${badgeHtml}</div>`
+      : '';
+
     return `<div class="lib-pick-item" onclick="applyPick(${item.id})">
       <div class="lib-pick-item-name">${escHtml(item.name)}</div>
-      <div class="lib-pick-item-preview">${escHtml(preview || '')}</div>
+      <div class="lib-pick-item-preview">${escHtml(previewText)}</div>
+      ${chunkInfo}
     </div>`;
   }).join('');
 }
@@ -2743,13 +2875,34 @@ async function applyPick(id) {
   const item = await libGet(storeMap[pickTargetType], id);
   if (!item) return;
 
+  const chunks = getChunks(item);
+  let picked = '';
+
+  if (!chunks.length) {
+    picked = '';
+  } else if (chunks.length === 1) {
+    picked = chunks[0];
+  } else {
+    const seqKey = `${pickTargetType}-${id}`;
+    if (pickOpts.mode === 'random') {
+      picked = chunks[Math.floor(Math.random() * chunks.length)];
+    } else {
+      // Sequential
+      const idx = (pickSeqIndex[seqKey] || 0) % chunks.length;
+      picked = chunks[idx];
+      pickSeqIndex[seqKey] = idx + 1;
+    }
+  }
+
   const el = document.getElementById(pickTargetId);
   if (el) {
-    el.value = pickTargetType === 'hashtag' ? item.hashtags : item.content;
+    el.value = picked;
     el.dispatchEvent(new Event('input'));
   }
   closeModal('pickModal');
-  showLibToast(`"${item.name}" applied ✓`);
+  const modeLabel = pickOpts.mode === 'random' ? '🔀 สุ่ม' : '📋 เรียง';
+  const fmtLabel = pickOpts.fmt === 'pipe' ? 'ชุด |' : 'บรรทัด';
+  showLibToast(`"${item.name}" → ${modeLabel} (${fmtLabel}) ✓`);
 }
 
 // ─── TOAST (Library) ─────────────────────────────────────────────────────────
