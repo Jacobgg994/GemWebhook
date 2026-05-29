@@ -947,6 +947,90 @@
 
   .lib-empty-icon { font-size: 36px; margin-bottom: 12px; }
 
+  /* SLEEK MODERN TABLES FOR PROFILES */
+  .lib-table-wrapper {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin-top: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .lib-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+    font-size: 12px;
+  }
+  .lib-table th {
+    background: var(--panel2);
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  .lib-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .lib-table tr:last-child td {
+    border-bottom: none;
+  }
+  .lib-table tbody tr {
+    transition: background 0.15s ease;
+  }
+  .lib-table tbody tr:hover {
+    background: rgba(255,255,255,0.02);
+  }
+  /* Custom modern checkbox */
+  .custom-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    background: var(--panel2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+    transition: all 0.15s ease;
+    vertical-align: middle;
+    margin: 0;
+  }
+  .custom-checkbox:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .custom-checkbox:checked::after {
+    content: "✓";
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+    display: block;
+    line-height: 1;
+  }
+  .custom-checkbox:indeterminate {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .custom-checkbox:indeterminate::after {
+    content: "-";
+    font-size: 12px;
+    color: white;
+    font-weight: bold;
+    display: block;
+    line-height: 1;
+    margin-top: -1px;
+  }
+
   /* MODAL */
   .lib-modal-overlay {
     position: fixed;
@@ -1294,10 +1378,36 @@
         </div>
         <!-- LIBRARY MODE -->
         <div id="profileLibraryArea" style="display:none;">
-          <select id="builder-profileGroup" onchange="applyProfileGroup()" style="margin-bottom:6px;">
-            <option value="">-- Select a profile group --</option>
-          </select>
-          <div id="profileGroupPreview" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:11px;color:var(--text-muted);min-height:44px;">Select a group to preview IDs</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <input type="text" id="builder-profile-search" placeholder="🔍 Search profiles..." oninput="renderBuilderProfileTable()" style="flex:1;font-size:11px;padding:6px 10px;height:30px;margin-bottom:0;">
+            <button class="btn btn-secondary" onclick="clearBuilderProfileSelection()" style="font-size:11px;padding:0 12px;height:30px;white-space:nowrap;flex-shrink:0;">🧹 Clear</button>
+          </div>
+          
+          <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel);">
+            <table style="width:100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 11px;">
+              <thead style="position: sticky; top: 0; background: var(--panel2); z-index: 1; border-bottom: 1px solid var(--border); box-shadow: 0 1px 0 var(--border);">
+                <tr style="color:var(--text-muted);font-weight:600;">
+                  <th style="padding:8px 10px; width:30px; text-align:center; background: var(--panel2);">
+                    <input type="checkbox" id="builder-profile-select-all" class="custom-checkbox" onclick="toggleSelectAllBuilderProfiles(this)" style="cursor:pointer;">
+                  </th>
+                  <th style="padding:8px 10px; width:30px; text-align:center; background: var(--panel2);">#</th>
+                  <th style="padding:8px 10px; cursor:pointer; user-select:none; background: var(--panel2);" onclick="toggleBuilderProfilesSort('name')">
+                    NAME <span id="builder-sort-icon-name" style="font-size:8px;color:var(--accent);">▲▼</span>
+                  </th>
+                  <th style="padding:8px 10px; cursor:pointer; user-select:none; background: var(--panel2);" onclick="toggleBuilderProfilesSort('profileId')">
+                    PROFILE ID <span id="builder-sort-icon-id" style="font-size:8px;color:var(--accent);">▲▼</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="builder-profile-tbody">
+                <!-- profiles list with checkboxes -->
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:11px;color:var(--text-muted);padding:0 2px;">
+            <span id="builder-profile-selected-count">Selected: 0 profiles</span>
+            <span style="font-size:9px;color:var(--accent);">Updates run config instantly</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1535,11 +1645,11 @@
   <div class="lib-panel" id="libpanel-profiles">
     <div class="lib-toolbar">
       <input class="lib-search" type="text" placeholder="🔍 Search profiles..." oninput="renderProfiles(this.value)">
-      <span class="lib-count" id="lib-count-profiles">0 items</span>
-      <button class="btn btn-primary" onclick="openModal('profile')" style="font-size:11px; padding:7px 14px;">➕ Add Group</button>
+      <span class="lib-count" id="lib-count-profiles">0 profiles</span>
+      <button class="btn btn-primary" onclick="openModal('profile')" style="font-size:11px; padding:7px 14px;">➕ Add Profile</button>
     </div>
     <div id="lib-list-profiles" style="display:flex;flex-direction:column;gap:8px;">
-      <div class="lib-empty"><div class="lib-empty-icon">👤</div>No profile groups yet. Click ➕ Add Group to create one.</div>
+      <div class="lib-empty"><div class="lib-empty-icon">👤</div>No profiles yet. Click ➕ Add Profile to create one.</div>
     </div>
   </div>
 
@@ -2492,6 +2602,34 @@ let pickAllItems = [];    // cache for filter
 
 const LIB_STORES = ['captions', 'hashtagSets', 'images', 'collections', 'profiles'];
 
+async function migrateOldProfilesStore() {
+  const items = await libGetAll('profiles');
+  let migratedCount = 0;
+  for (const item of items) {
+    if (item.profileIds && Array.isArray(item.profileIds)) {
+      const baseName = item.name || 'Migrated Group';
+      const ids = item.profileIds;
+      if (ids.length === 1) {
+        await libAdd('profiles', { name: baseName, profileId: ids[0] });
+      } else {
+        for (let i = 0; i < ids.length; i++) {
+          await libAdd('profiles', { name: `${baseName}_${i + 1}`, profileId: ids[i] });
+        }
+      }
+      migratedCount++;
+      // Delete the old group
+      await new Promise((resolve) => {
+        const req = libTx('profiles', 'readwrite').delete(item.id);
+        req.onsuccess = resolve;
+        req.onerror = resolve;
+      });
+    }
+  }
+  if (migratedCount > 0) {
+    console.log(`Successfully migrated ${migratedCount} old profile groups.`);
+  }
+}
+
 function initLibDB() {
   return new Promise((resolve, reject) => {
     if (libDB) { resolve(libDB); return; }
@@ -2504,7 +2642,15 @@ function initLibDB() {
         }
       });
     };
-    req.onsuccess = (e) => { libDB = e.target.result; resolve(libDB); };
+    req.onsuccess = async (e) => {
+      libDB = e.target.result;
+      try {
+        await migrateOldProfilesStore();
+      } catch (err) {
+        console.error('Migration failed:', err);
+      }
+      resolve(libDB);
+    };
     req.onerror = () => reject(req.error);
   });
 }
@@ -2711,50 +2857,93 @@ function randomProfileName() {
   return `${adj} ${noun}`;
 }
 
+let libProfilesSortKey = 'name';
+let libProfilesSortDir = 'asc';
+
+function toggleLibProfilesSort(key) {
+  if (libProfilesSortKey === key) {
+    libProfilesSortDir = libProfilesSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    libProfilesSortKey = key;
+    libProfilesSortDir = 'asc';
+  }
+  const searchInput = document.querySelector('#libpanel-profiles .lib-search');
+  renderProfiles(searchInput ? searchInput.value : '');
+}
+
 async function renderProfiles(q = '') {
   await initLibDB();
   const items = await libGetAll('profiles');
-  const filtered = q ? items.filter(i => i.name.toLowerCase().includes(q.toLowerCase())) : items;
+  const filtered = q ? items.filter(i => 
+    i.name.toLowerCase().includes(q.toLowerCase()) || 
+    (i.profileId && i.profileId.toLowerCase().includes(q.toLowerCase()))
+  ) : items;
+
   const list = document.getElementById('lib-list-profiles');
   const count = document.getElementById('lib-count-profiles');
-  if (count) count.textContent = `${filtered.length} groups`;
+  if (count) count.textContent = `${filtered.length} profiles`;
   if (!list) return;
 
   if (!filtered.length) {
-    list.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">\ud83d\udc64</div>${q ? 'No results.' : 'No profile groups yet. Click \u2795 Add Group.'}</div>`;
+    list.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">\ud83d\udc64</div>${q ? 'No results found.' : 'No profiles saved yet. Click ➕ Add Profile.'}</div>`;
     return;
   }
 
-  list.innerHTML = filtered.map(item => {
-    const ids = (item.profileIds || []);
-    const preview = ids.slice(0, 3).map(id => `<code style="font-size:9px;background:var(--panel2);padding:1px 6px;border-radius:3px;border:1px solid var(--border);color:var(--accent);">${escHtml(id)}</code>`).join(' ');
-    const more = ids.length > 3 ? `<span style="font-size:9px;color:var(--text-muted);"> +${ids.length - 3} more</span>` : '';
-    return `
-      <div class="lib-card" style="flex-direction:row;align-items:center;gap:12px;padding:12px 14px;">
-        <div style="font-size:20px;flex-shrink:0;">\ud83d\udc64</div>
-        <div style="flex:1;min-width:0;">
-          <div class="lib-card-name">${escHtml(item.name)}</div>
-          <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;align-items:center;">${preview}${more}</div>
-          <div class="lib-card-meta" style="margin-top:4px;">${ids.length} ID${ids.length !== 1 ? 's' : ''} &middot; ${fmtDate(item.createdAt)}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-          <button class="lib-btn-action pick" onclick="useProfileGroup(${item.id})" style="white-space:nowrap;">\u26a1 Use</button>
-          <button class="lib-btn-action" onclick="openModal('profile', ${item.id})">\u270f\ufe0f Edit</button>
-          <button class="lib-btn-action danger" onclick="deleteLibItem('profiles', ${item.id}, renderProfiles)">\ud83d\uddd1\ufe0f</button>
-        </div>
-      </div>`;
-  }).join('');
-}
+  // Sort
+  filtered.sort((a, b) => {
+    let valA = a[libProfilesSortKey] || '';
+    let valB = b[libProfilesSortKey] || '';
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+    if (valA < valB) return libProfilesSortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return libProfilesSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
-async function useProfileGroup(id) {
-  await initLibDB();
-  const item = await libGet('profiles', id);
-  if (!item) return;
-  setProfileMode('manual');
-  document.getElementById('builder-profileIds').value = (item.profileIds || []).join('\n');
-  generateJson();
-  switchPage('online');
-  showLibToast(`"${item.name}" - ${(item.profileIds||[]).length} IDs applied`);
+  const sortIcon = (key) => {
+    if (libProfilesSortKey !== key) return '▲▼';
+    return libProfilesSortDir === 'asc' ? '▲' : '▼';
+  };
+
+  list.innerHTML = `
+    <div class="lib-table-wrapper" style="margin-top:0;">
+      <table class="lib-table">
+        <thead>
+          <tr style="background:var(--panel2);border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">
+            <th style="padding:10px 12px;width:50px;text-align:center;">#</th>
+            <th style="padding:10px 12px;cursor:pointer;user-select:none;" onclick="toggleLibProfilesSort('name')">NAME <span style="font-size:9px;color:var(--accent);">${sortIcon('name')}</span></th>
+            <th style="padding:10px 12px;cursor:pointer;user-select:none;" onclick="toggleLibProfilesSort('profileId')">PROFILE ID <span style="font-size:9px;color:var(--accent);">${sortIcon('profileId')}</span></th>
+            <th style="padding:10px 12px;">CREATED</th>
+            <th style="padding:10px 12px;text-align:right;width:100px;">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map((item, idx) => `
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 12px;text-align:center;color:var(--text-muted);font-weight:600;">${idx + 1}</td>
+              <td style="padding:10px 12px;">
+                <div style="display:flex;align-items:center;">
+                  <div style="position:relative;display:inline-flex;flex-shrink:0;">
+                    <span style="display:inline-flex;align-items:center;justify-content:center;background:rgba(59,130,246,0.12);color:#3b82f6;border-radius:6px;width:26px;height:26px;font-size:12px;font-weight:bold;margin-right:10px;">❖</span>
+                    <span style="background:#ef4444;color:white;font-size:8px;font-weight:800;border-radius:4px;padding:1px 3px;position:absolute;top:-4px;right:2px;line-height:1;border:1px solid var(--panel);">137</span>
+                  </div>
+                  <span style="font-weight:600;color:var(--text);">${escHtml(item.name)}</span>
+                </div>
+              </td>
+              <td style="padding:10px 12px;"><code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);">${escHtml(item.profileId || '')}</code></td>
+              <td style="padding:10px 12px;color:var(--text-muted);font-size:11px;">${fmtDate(item.createdAt)}</td>
+              <td style="padding:10px 12px;text-align:right;">
+                <div style="display:inline-flex;gap:4px;">
+                  <button class="lib-btn-action" onclick="openModal('profile', ${item.id})" style="padding:3px 8px;font-size:10px;">✏️ Edit</button>
+                  <button class="lib-btn-action danger" onclick="deleteLibItem('profiles', ${item.id}, () => renderProfiles())" style="padding:3px 6px;font-size:10px;">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 // ─── MODAL SYSTEM ────────────────────────────────────────────────────────────
@@ -2768,7 +2957,7 @@ async function openModal(type, editId = null) {
   const body = document.getElementById('libModalBody');
 
   const storeMap = { caption: 'captions', hashtag: 'hashtagSets', image: 'images', collection: 'collections', profile: 'profiles' };
-  const labelMap = { caption: '📝 Caption', hashtag: '#️⃣ Hashtag Set', image: '🖼️ Image', collection: '📦 Collection', profile: '👤 Profile Group' };
+  const labelMap = { caption: '📝 Caption', hashtag: '#️⃣ Hashtag Set', image: '🖼️ Image', collection: '📦 Collection', profile: '👤 Profile' };
 
   title.textContent = `${editId ? 'Edit' : 'Add'} ${labelMap[type]}`;
 
@@ -2810,35 +2999,40 @@ async function openModal(type, editId = null) {
       <div class="field"><label>Images (multi-select)</label><select id="m-images" multiple style="min-height:90px;">${mkOpts(images, selImgs)}</select></div>
       <div style="font-size:10px;color:var(--text-muted);">Hold Ctrl / Cmd to select multiple items.</div>`;
   } else if (type === 'profile') {
-    const existingIds = (existing?.profileIds || []).join('\n');
+    const existingId = existing?.profileId || '';
     const defaultName = existing?.name || '';
     body.innerHTML = `
       <div class="field">
-        <label>Group Name</label>
+        <label>Profile Name</label>
         <div style="display:flex;gap:8px;">
           <input type="text" id="m-name" value="${escHtml(defaultName)}" placeholder="Leave blank to auto-generate" style="flex:1;">
           <button class="btn btn-secondary" style="flex-shrink:0;padding:6px 10px;font-size:11px;" onclick="document.getElementById('m-name').value=randomProfileName()">🎲 Random</button>
         </div>
       </div>
       <div class="field">
-        <label>Profile IDs <span style="font-size:10px;color:var(--text-muted);font-weight:400;">(one per line, or paste multiple)</span></label>
-        <textarea id="m-profile-ids" style="min-height:160px;font-family:'JetBrains Mono',monospace;font-size:11px;" placeholder="Paste one or more Profile IDs here...\n699d8a53145c9356697df060\nabc123def456...">${escHtml(existingIds)}</textarea>
+        <label>Profile ID${editId ? '' : 's <span style="font-size:10px;color:var(--text-muted);font-weight:400;">(one per line, or paste multiple)</span>'}</label>
+        <textarea id="m-profile-ids" style="min-height:120px;font-family:'JetBrains Mono',monospace;font-size:11px;" placeholder="Paste Profile ID here...\n699d8a53145c9356697df060">${escHtml(existingId)}</textarea>
       </div>
+      ${!editId ? `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span id="m-profile-count" style="font-size:10px;color:var(--text-muted);">0 IDs</span>
         <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;" onclick="clearDuplicateIds()">🧹 Remove Duplicates</button>
-      </div>`;
+      </div>` : ''}`;
 
-    // Live count
-    setTimeout(() => {
-      const ta = document.getElementById('m-profile-ids');
-      const updateCount = () => {
-        const ids = ta.value.split('\n').map(s=>s.trim()).filter(Boolean);
-        document.getElementById('m-profile-count').textContent = `${ids.length} ID${ids.length!==1?'s':''}`;
-      };
-      ta.addEventListener('input', updateCount);
-      updateCount();
-    }, 50);
+    if (!editId) {
+      // Live count
+      setTimeout(() => {
+        const ta = document.getElementById('m-profile-ids');
+        const updateCount = () => {
+          if (!ta) return;
+          const ids = ta.value.split('\n').map(s=>s.trim()).filter(Boolean);
+          const lbl = document.getElementById('m-profile-count');
+          if (lbl) lbl.textContent = `${ids.length} ID${ids.length!==1?'s':''}`;
+        };
+        ta.addEventListener('input', updateCount);
+        updateCount();
+      }, 50);
+    }
   }
 
   overlay.classList.add('show');
@@ -2890,7 +3084,39 @@ async function saveModalItem() {
     data.imageIds = getSelIds('m-images');
   } else if (libModalType === 'profile') {
     const rawIds = document.getElementById('m-profile-ids')?.value || '';
-    data.profileIds = rawIds.split('\n').map(s => s.trim()).filter(Boolean);
+    const ids = rawIds.split('\n').map(s => s.trim()).filter(Boolean);
+    if (ids.length === 0) {
+      alert('Please enter at least one Profile ID.');
+      return;
+    }
+    if (libEditId) {
+      data.profileId = ids[0];
+      await libPut(store, data);
+    } else {
+      if (ids.length === 1) {
+        data.profileId = ids[0];
+        await libAdd(store, data);
+      } else {
+        // Bulk import multiple profiles!
+        for (let i = 0; i < ids.length; i++) {
+          await libAdd(store, {
+            name: `${nameVal}_${i + 1}`,
+            profileId: ids[i]
+          });
+        }
+      }
+    }
+    closeModal('libModal');
+    showLibToast(libEditId ? 'Updated!' : 'Saved!');
+    
+    // Refresh UIs
+    if (typeof renderProfiles === 'function') renderProfiles();
+    if (typeof refreshBuilderProfileTable === 'function') {
+      await refreshBuilderProfileTable();
+    }
+    libEditId = null;
+    libModalType = null;
+    return;
   }
 
   if (libEditId) {
@@ -2902,9 +3128,8 @@ async function saveModalItem() {
   closeModal('libModal');
   showLibToast(libEditId ? 'Updated!' : 'Saved!');
 
-  const refreshMap = { captions: renderCaptions, hashtagSets: renderHashtags, images: renderImages, collections: renderCollections, profiles: renderProfiles };
+  const refreshMap = { captions: renderCaptions, hashtagSets: renderHashtags, images: renderImages, collections: renderCollections };
   refreshMap[store]?.();
-  if (store === 'profiles') refreshProfileGroupSelect();
   libEditId = null;
   libModalType = null;
 }
@@ -2925,41 +3150,216 @@ function closeModal(id) {
 // ─── PROFILE BUILDER TOGGLE ──────────────────────────────────────────────────
 let profileCurrentMode = 'manual';
 
+let builderSelectedProfileIds = new Set();
+let builderProfilesSortKey = 'name';
+let builderProfilesSortDir = 'asc';
+
 function setProfileMode(mode) {
   profileCurrentMode = mode;
   document.getElementById('profileMode-manual').classList.toggle('active', mode === 'manual');
   document.getElementById('profileMode-library').classList.toggle('active', mode === 'library');
   document.getElementById('profileManualArea').style.display = mode === 'manual' ? '' : 'none';
   document.getElementById('profileLibraryArea').style.display = mode === 'library' ? '' : 'none';
-  if (mode === 'library') refreshProfileGroupSelect();
+  
+  if (mode === 'library') {
+    syncBuilderProfileSelection();
+  }
 }
 
-async function refreshProfileGroupSelect() {
-  await initLibDB();
-  const items = await libGetAll('profiles');
-  const sel = document.getElementById('builder-profileGroup');
-  if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">-- Select a profile group --</option>' +
-    items.map(i => `<option value="${i.id}" ${cur == i.id ? 'selected' : ''}>${escHtml(i.name)} (${(i.profileIds||[]).length} IDs)</option>`).join('');
-  if (cur) applyProfileGroup();
+function syncBuilderProfileSelection() {
+  const textVal = document.getElementById('builder-profileIds').value;
+  const currentIds = textVal.split('\n').map(s => s.trim()).filter(Boolean);
+  builderSelectedProfileIds = new Set(currentIds);
+  renderBuilderProfileTable();
 }
 
-async function applyProfileGroup() {
+let cachedBuilderProfiles = [];
+
+function toggleBuilderProfilesSort(key) {
+  if (builderProfilesSortKey === key) {
+    builderProfilesSortDir = builderProfilesSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    builderProfilesSortKey = key;
+    builderProfilesSortDir = 'asc';
+  }
+  renderBuilderProfileTable(true);
+}
+
+async function refreshBuilderProfileTable() {
+  if (profileCurrentMode === 'library') {
+    await renderBuilderProfileTable();
+  }
+}
+
+async function renderBuilderProfileTable(useCache = false) {
   await initLibDB();
-  const sel = document.getElementById('builder-profileGroup');
-  const preview = document.getElementById('profileGroupPreview');
-  if (!sel || !sel.value) {
-    if (preview) preview.textContent = 'Select a group to preview IDs';
+  
+  if (!useCache) {
+    cachedBuilderProfiles = await libGetAll('profiles');
+  }
+  
+  const q = document.getElementById('builder-profile-search')?.value || '';
+  const filtered = q ? cachedBuilderProfiles.filter(i => 
+    i.name.toLowerCase().includes(q.toLowerCase()) || 
+    (i.profileId && i.profileId.toLowerCase().includes(q.toLowerCase()))
+  ) : [...cachedBuilderProfiles];
+  
+  // Sort
+  filtered.sort((a, b) => {
+    let valA = a[builderProfilesSortKey] || '';
+    let valB = b[builderProfilesSortKey] || '';
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+    if (valA < valB) return builderProfilesSortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return builderProfilesSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  // Update Sort Icon UI Indicators
+  const sortIcon = (key) => {
+    if (builderProfilesSortKey !== key) return '▲▼';
+    return builderProfilesSortDir === 'asc' ? '▲' : '▼';
+  };
+  const iconName = document.getElementById('builder-sort-icon-name');
+  const iconId = document.getElementById('builder-sort-icon-id');
+  if (iconName) iconName.textContent = sortIcon('name');
+  if (iconId) iconId.textContent = sortIcon('profileId');
+  
+  const tbody = document.getElementById('builder-profile-tbody');
+  if (!tbody) return;
+  
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">No profiles found.</td></tr>`;
+    updateSelectAllHeaderState(filtered);
+    updateSelectedCountUI();
     return;
   }
-  const item = await libGet('profiles', parseInt(sel.value));
-  if (!item) return;
-  const ids = item.profileIds || [];
-  if (preview) preview.innerHTML = ids.map(id => `<code style="display:block;font-size:10px;color:var(--accent);">${escHtml(id)}</code>`).join('');
-  // Also update the hidden profileIds textarea so generateJson() still works
-  document.getElementById('builder-profileIds').value = ids.join('\n');
+  
+  tbody.innerHTML = filtered.map((item, idx) => {
+    const isChecked = builderSelectedProfileIds.has(item.profileId);
+    return `
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 6px 10px; text-align: center; vertical-align: middle;">
+          <input type="checkbox" class="custom-checkbox builder-row-check" data-id="${escHtml(item.profileId)}" ${isChecked ? 'checked' : ''} onclick="handleBuilderRowCheck(this, '${escHtml(item.profileId)}')">
+        </td>
+        <td style="padding: 6px 10px; text-align: center; color: var(--text-muted); font-weight: 600;">${idx + 1}</td>
+        <td style="padding: 6px 10px;">
+          <div style="display:flex;align-items:center;">
+            <div style="position:relative;display:inline-flex;flex-shrink:0;margin-right:8px;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;background:rgba(59,130,246,0.1);color:#3b82f6;border-radius:4px;width:20px;height:20px;font-size:10px;font-weight:bold;">❖</span>
+              <span style="background:#ef4444;color:white;font-size:7px;font-weight:800;border-radius:3px;padding:0px 2px;position:absolute;top:-4px;right:-4px;line-height:1;border:1px solid var(--panel);">137</span>
+            </div>
+            <span style="font-weight: 600; color: var(--text);">${escHtml(item.name)}</span>
+          </div>
+        </td>
+        <td style="padding: 6px 10px;"><code style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);">${escHtml(item.profileId || '')}</code></td>
+      </tr>
+    `;
+  }).join('');
+  
+  updateSelectAllHeaderState(filtered);
+  updateSelectedCountUI();
+}
+
+function handleBuilderRowCheck(checkbox, profileId) {
+  if (checkbox.checked) {
+    builderSelectedProfileIds.add(profileId);
+  } else {
+    builderSelectedProfileIds.delete(profileId);
+  }
+  updateBuilderProfileIdsTextArea();
+  
+  // Re-verify the Select All header checkbox state
+  const q = document.getElementById('builder-profile-search')?.value || '';
+  const filtered = q ? cachedBuilderProfiles.filter(i => 
+    i.name.toLowerCase().includes(q.toLowerCase()) || 
+    (i.profileId && i.profileId.toLowerCase().includes(q.toLowerCase()))
+  ) : [...cachedBuilderProfiles];
+  updateSelectAllHeaderState(filtered);
+  updateSelectedCountUI();
+}
+
+function updateSelectAllHeaderState(filteredList) {
+  const headerCheck = document.getElementById('builder-profile-select-all');
+  if (!headerCheck) return;
+  
+  if (filteredList.length === 0) {
+    headerCheck.checked = false;
+    headerCheck.indeterminate = false;
+    return;
+  }
+  
+  let checkedCount = 0;
+  filteredList.forEach(item => {
+    if (builderSelectedProfileIds.has(item.profileId)) checkedCount++;
+  });
+  
+  if (checkedCount === 0) {
+    headerCheck.checked = false;
+    headerCheck.indeterminate = false;
+  } else if (checkedCount === filteredList.length) {
+    headerCheck.checked = true;
+    headerCheck.indeterminate = false;
+  } else {
+    headerCheck.checked = false;
+    headerCheck.indeterminate = true;
+  }
+}
+
+function toggleSelectAllBuilderProfiles(headerCheck) {
+  const q = document.getElementById('builder-profile-search')?.value || '';
+  const filtered = q ? cachedBuilderProfiles.filter(i => 
+    i.name.toLowerCase().includes(q.toLowerCase()) || 
+    (i.profileId && i.profileId.toLowerCase().includes(q.toLowerCase()))
+  ) : [...cachedBuilderProfiles];
+  
+  if (headerCheck.checked) {
+    filtered.forEach(item => {
+      if (item.profileId) builderSelectedProfileIds.add(item.profileId);
+    });
+  } else {
+    filtered.forEach(item => {
+      if (item.profileId) builderSelectedProfileIds.delete(item.profileId);
+    });
+  }
+  
+  // Update checkboxes in rows
+  const checks = document.querySelectorAll('.builder-row-check');
+  checks.forEach(chk => {
+    const id = chk.getAttribute('data-id');
+    chk.checked = builderSelectedProfileIds.has(id);
+  });
+  
+  updateBuilderProfileIdsTextArea();
+  updateSelectedCountUI();
+}
+
+function clearBuilderProfileSelection() {
+  builderSelectedProfileIds.clear();
+  const checks = document.querySelectorAll('.builder-row-check');
+  checks.forEach(chk => chk.checked = false);
+  
+  const headerCheck = document.getElementById('builder-profile-select-all');
+  if (headerCheck) {
+    headerCheck.checked = false;
+    headerCheck.indeterminate = false;
+  }
+  
+  updateBuilderProfileIdsTextArea();
+  updateSelectedCountUI();
+}
+
+function updateBuilderProfileIdsTextArea() {
+  const arr = Array.from(builderSelectedProfileIds);
+  document.getElementById('builder-profileIds').value = arr.join('\n');
   generateJson();
+}
+
+function updateSelectedCountUI() {
+  const countSpan = document.getElementById('builder-profile-selected-count');
+  if (countSpan) {
+    countSpan.textContent = `Selected: ${builderSelectedProfileIds.size} profile${builderSelectedProfileIds.size !== 1 ? 's' : ''}`;
+  }
 }
 
 // ─── PICK MODAL ──────────────────────────────────────────────────────────────
