@@ -746,6 +746,324 @@
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ─── LIBRARY ─────────────────────────────────────────────────────────────── */
+  #section-library {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .lib-subtabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .lib-subtab {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background: none;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .lib-subtab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .lib-subtab:hover:not(.active) { color: var(--text); border-color: var(--border-light); }
+
+  .lib-panel {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .lib-panel.show { display: block; }
+
+  .lib-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .lib-search {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 7px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .lib-search:focus { border-color: var(--accent); }
+
+  .lib-count {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+
+  /* CARD GRID */
+  .lib-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .lib-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+
+  .lib-card:hover {
+    border-color: var(--border-light);
+    box-shadow: var(--shadow);
+  }
+
+  .lib-card-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lib-card-content {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+  }
+
+  .lib-card-meta {
+    font-size: 9px;
+    color: var(--text-muted);
+  }
+
+  .lib-card-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .lib-btn-action {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .lib-btn-action:hover { border-color: var(--border-light); color: var(--text); }
+  .lib-btn-action.pick { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
+  .lib-btn-action.pick:hover { background: var(--accent); color: #fff; }
+  .lib-btn-action.danger:hover { border-color: var(--err); color: var(--err); background: #fef2f2; }
+
+  /* TAG BADGES */
+  .lib-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .lib-tag {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: #eff6ff;
+    color: var(--accent);
+    border: 1px solid #bfdbfe;
+  }
+
+  /* IMAGE CARD */
+  .lib-img-thumb {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+  }
+
+  .lib-img-placeholder {
+    width: 100%;
+    height: 120px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: var(--text-muted);
+  }
+
+  .lib-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .lib-empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+  /* MODAL */
+  .lib-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .lib-modal-overlay.show { display: flex; }
+
+  .lib-modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: modal-in 0.2s ease;
+  }
+
+  @keyframes modal-in {
+    from { transform: scale(0.95) translateY(-10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .lib-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .lib-modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .lib-modal-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .lib-modal-close:hover { color: var(--err); background: #fef2f2; }
+
+  .lib-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .lib-modal-footer {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* PICK MODAL LIST */
+  .lib-pick-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .lib-pick-item {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--panel2);
+  }
+
+  .lib-pick-item:hover { border-color: var(--accent); background: #eff6ff; }
+
+  .lib-pick-item-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .lib-pick-item-preview { font-size: 10px; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+  /* Inline pick button (in script parameters) */
+  .param-pick-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--panel2);
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .param-pick-btn:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+
+  .param-with-pick { display: flex; gap: 6px; align-items: flex-start; }
+  .param-with-pick input, .param-with-pick textarea { flex: 1; }
 </style>
 </head>
 <body>
@@ -771,6 +1089,7 @@
 <div class="mode-tabs" style="margin: 0; border-radius: 0; border-left: none; border-right: none; padding: 4px 20px; background: var(--panel2);">
   <button class="mode-tab active" onclick="switchPage('online')" id="nav-online" style="max-width: 150px;">🌐 ONLINE MODE</button>
   <button class="mode-tab" onclick="switchPage('local')" id="nav-local" style="max-width: 150px;">💻 LOCAL MODE</button>
+  <button class="mode-tab" onclick="switchPage('library')" id="nav-library" style="max-width: 150px;">📂 LIBRARY</button>
 </div>
 
 <!-- ONLINE SECTION -->
@@ -1071,6 +1390,100 @@
 
 
 
+<!-- LIBRARY SECTION -->
+<div id="section-library" style="display:none; flex:1; flex-direction:column; overflow:hidden; border-bottom: 1px solid var(--border);">
+
+  <!-- Sub-Tab Bar -->
+  <div class="lib-subtabs">
+    <button class="lib-subtab active" onclick="switchLibTab('captions')" id="libtab-captions">📝 Captions</button>
+    <button class="lib-subtab" onclick="switchLibTab('hashtags')" id="libtab-hashtags">#️⃣ Hashtags</button>
+    <button class="lib-subtab" onclick="switchLibTab('images')" id="libtab-images">🖼️ Images</button>
+    <button class="lib-subtab" onclick="switchLibTab('collections')" id="libtab-collections">📦 Collections</button>
+  </div>
+
+  <!-- CAPTIONS PANEL -->
+  <div class="lib-panel show" id="libpanel-captions">
+    <div class="lib-toolbar">
+      <input class="lib-search" type="text" placeholder="🔍 Search captions..." oninput="renderCaptions(this.value)">
+      <span class="lib-count" id="lib-count-captions">0 items</span>
+      <button class="btn btn-primary" onclick="openModal('caption')" style="font-size:11px; padding:7px 14px;">➕ Add</button>
+    </div>
+    <div class="lib-grid" id="lib-grid-captions">
+      <div class="lib-empty"><div class="lib-empty-icon">📝</div>No captions yet. Click ➕ Add to create one.</div>
+    </div>
+  </div>
+
+  <!-- HASHTAGS PANEL -->
+  <div class="lib-panel" id="libpanel-hashtags">
+    <div class="lib-toolbar">
+      <input class="lib-search" type="text" placeholder="🔍 Search hashtag sets..." oninput="renderHashtags(this.value)">
+      <span class="lib-count" id="lib-count-hashtags">0 items</span>
+      <button class="btn btn-primary" onclick="openModal('hashtag')" style="font-size:11px; padding:7px 14px;">➕ Add</button>
+    </div>
+    <div class="lib-grid" id="lib-grid-hashtags">
+      <div class="lib-empty"><div class="lib-empty-icon">#️⃣</div>No hashtag sets yet. Click ➕ Add to create one.</div>
+    </div>
+  </div>
+
+  <!-- IMAGES PANEL -->
+  <div class="lib-panel" id="libpanel-images">
+    <div class="lib-toolbar">
+      <input class="lib-search" type="text" placeholder="🔍 Search images..." oninput="renderImages(this.value)">
+      <span class="lib-count" id="lib-count-images">0 items</span>
+      <button class="btn btn-primary" onclick="openModal('image')" style="font-size:11px; padding:7px 14px;">➕ Upload</button>
+    </div>
+    <div class="lib-grid" id="lib-grid-images">
+      <div class="lib-empty"><div class="lib-empty-icon">🖼️</div>No images yet. Click ➕ Upload to add one.</div>
+    </div>
+  </div>
+
+  <!-- COLLECTIONS PANEL -->
+  <div class="lib-panel" id="libpanel-collections">
+    <div class="lib-toolbar">
+      <input class="lib-search" type="text" placeholder="🔍 Search collections..." oninput="renderCollections(this.value)">
+      <span class="lib-count" id="lib-count-collections">0 items</span>
+      <button class="btn btn-primary" onclick="openModal('collection')" style="font-size:11px; padding:7px 14px;">➕ Add</button>
+    </div>
+    <div class="lib-grid" id="lib-grid-collections">
+      <div class="lib-empty"><div class="lib-empty-icon">📦</div>No collections yet. Click ➕ Add to create one.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="lib-modal-overlay" id="libModal">
+  <div class="lib-modal">
+    <div class="lib-modal-header">
+      <span class="lib-modal-title" id="libModalTitle">Add Caption</span>
+      <button class="lib-modal-close" onclick="closeModal('libModal')">×</button>
+    </div>
+    <div class="lib-modal-body" id="libModalBody">
+      <!-- Dynamic content -->
+    </div>
+    <div class="lib-modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('libModal')">Cancel</button>
+      <button class="btn btn-primary" id="libModalSaveBtn" onclick="saveModalItem()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PICK MODAL -->
+<div class="lib-modal-overlay" id="pickModal">
+  <div class="lib-modal">
+    <div class="lib-modal-header">
+      <span class="lib-modal-title" id="pickModalTitle">Pick from Library</span>
+      <button class="lib-modal-close" onclick="closeModal('pickModal')">×</button>
+    </div>
+    <div class="lib-modal-body">
+      <input class="lib-search" type="text" placeholder="🔍 Search..." oninput="filterPickList(this.value)" style="margin-bottom:0;">
+      <div class="lib-pick-list" id="pickModalList" style="margin-top:10px;">
+        <!-- Items rendered dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ACTIVITY LOG PANEL (Bottom) -->
 <div class="logpanel">
   <div class="log-header">
@@ -1096,6 +1509,26 @@ function toggleTheme() {
   const target = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', target);
   localStorage.setItem('gr_theme', target);
+}
+// Load saved theme on start
+(function() {
+  const t = localStorage.getItem('gr_theme');
+  if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toast-container');
+  if (!c) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  t.textContent = `${icons[type] || ''} ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.classList.add('fade-out');
+    setTimeout(() => t.remove(), 350);
+  }, 2800);
 }
 
 function copyAsCurl(mode) {
@@ -1410,9 +1843,35 @@ function renderScriptParameters() {
       input.oninput = generateJson;
 
       fieldDiv.appendChild(label);
-      fieldDiv.appendChild(input);
+
+      // Add Pick buttons for string-type params
+      if (param.type !== 'number') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'param-with-pick';
+        wrapper.appendChild(input);
+
+        const btnCaption = document.createElement('button');
+        btnCaption.className = 'param-pick-btn';
+        btnCaption.textContent = '📝 Caption';
+        btnCaption.title = 'Pick from Caption Library';
+        btnCaption.onclick = (e) => { e.preventDefault(); openPickModal(`sp-${param.name}`, 'caption'); };
+
+        const btnHashtag = document.createElement('button');
+        btnHashtag.className = 'param-pick-btn';
+        btnHashtag.textContent = '#️⃣ Hashtag';
+        btnHashtag.title = 'Pick from Hashtag Library';
+        btnHashtag.onclick = (e) => { e.preventDefault(); openPickModal(`sp-${param.name}`, 'hashtag'); };
+
+        wrapper.appendChild(btnCaption);
+        wrapper.appendChild(btnHashtag);
+        fieldDiv.appendChild(wrapper);
+      } else {
+        fieldDiv.appendChild(input);
+      }
+
       container.appendChild(fieldDiv);
     }
+
   });
 }
 // ─── PAGE SWITCHING ───────────────────────────────────────────────────────────
@@ -1420,9 +1879,16 @@ function switchPage(p) {
   state.page = p;
   document.getElementById('section-online').style.display = p === 'online' ? '' : 'none';
   document.getElementById('section-local').style.display = p === 'local' ? '' : 'none';
+  const libEl = document.getElementById('section-library');
+  if (libEl) libEl.style.display = p === 'library' ? 'flex' : 'none';
   document.getElementById('nav-online').classList.toggle('active', p === 'online');
   document.getElementById('nav-local').classList.toggle('active', p === 'local');
-  addLog('info', `Switched to ${p.toUpperCase()} mode.`);
+  const navLib = document.getElementById('nav-library');
+  if (navLib) navLib.classList.toggle('active', p === 'library');
+  if (p === 'library') {
+    renderCaptions(); renderHashtags(); renderImages(); renderCollections();
+  }
+  if (p !== 'library') addLog('info', `Switched to ${p.toUpperCase()} mode.`);
 }
 
 // ─── STATUS ───────────────────────────────────────────────────────────────────
@@ -1895,6 +2361,414 @@ function generateJson() {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+
+// ─── LIBRARY (IndexedDB) ────────────────────────────────────────────────────
+let libDB = null;
+let libModalType = null;  // 'caption' | 'hashtag' | 'image' | 'collection'
+let libEditId = null;     // null = new, number = edit
+let pickTargetId = null;  // DOM id of input to inject pick result
+let pickTargetType = null; // 'caption' | 'hashtag'
+let pickAllItems = [];    // cache for filter
+
+const LIB_STORES = ['captions', 'hashtagSets', 'images', 'collections'];
+
+function initLibDB() {
+  return new Promise((resolve, reject) => {
+    if (libDB) { resolve(libDB); return; }
+    const req = indexedDB.open('GemRunnerLib', 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      LIB_STORES.forEach(store => {
+        if (!db.objectStoreNames.contains(store)) {
+          db.createObjectStore(store, { keyPath: 'id', autoIncrement: true });
+        }
+      });
+    };
+    req.onsuccess = (e) => { libDB = e.target.result; resolve(libDB); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function libTx(store, mode = 'readonly') {
+  return libDB.transaction(store, mode).objectStore(store);
+}
+
+function libGetAll(store) {
+  return new Promise((resolve) => {
+    const req = libTx(store).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => resolve([]);
+  });
+}
+
+function libAdd(store, data) {
+  return new Promise((resolve, reject) => {
+    data.createdAt = Date.now();
+    const req = libTx(store, 'readwrite').add(data);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function libPut(store, data) {
+  return new Promise((resolve, reject) => {
+    const req = libTx(store, 'readwrite').put(data);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function libDelete(store, id) {
+  return new Promise((resolve, reject) => {
+    const req = libTx(store, 'readwrite').delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function libGet(store, id) {
+  return new Promise((resolve, reject) => {
+    const req = libTx(store).get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ─── SUB-TAB SWITCHING ───────────────────────────────────────────────────────
+function switchLibTab(tab) {
+  ['captions','hashtags','images','collections'].forEach(t => {
+    document.getElementById(`libtab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`libpanel-${t}`).classList.toggle('show', t === tab);
+  });
+}
+
+// ─── RENDER HELPERS ─────────────────────────────────────────────────────────
+function fmtDate(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' });
+}
+
+function renderTags(tags) {
+  if (!tags || !tags.length) return '';
+  return `<div class="lib-tags">${tags.map(t => `<span class="lib-tag">${escHtml(t)}</span>`).join('')}</div>`;
+}
+
+// ─── CAPTIONS ────────────────────────────────────────────────────────────────
+async function renderCaptions(q = '') {
+  await initLibDB();
+  const items = await libGetAll('captions');
+  const filtered = q ? items.filter(i => (i.name + i.content + (i.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase())) : items;
+  const grid = document.getElementById('lib-grid-captions');
+  const count = document.getElementById('lib-count-captions');
+  if (count) count.textContent = `${filtered.length} items`;
+  if (!grid) return;
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">📝</div>${q ? 'No results found.' : 'No captions yet. Click ➕ Add to create one.'}</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(item => `
+    <div class="lib-card">
+      <div class="lib-card-name">${escHtml(item.name)}</div>
+      <div class="lib-card-content">${escHtml(item.content)}</div>
+      ${renderTags(item.tags)}
+      <div class="lib-card-meta">${fmtDate(item.createdAt)}</div>
+      <div class="lib-card-actions">
+        <button class="lib-btn-action" onclick="copyToClip('${escHtml(item.content).replace(/'/g,"\\'")}')">📋 Copy</button>
+        <button class="lib-btn-action" onclick="openModal('caption', ${item.id})">✏️ Edit</button>
+        <button class="lib-btn-action danger" onclick="deleteLibItem('captions', ${item.id}, renderCaptions)">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+// ─── HASHTAGS ────────────────────────────────────────────────────────────────
+async function renderHashtags(q = '') {
+  await initLibDB();
+  const items = await libGetAll('hashtagSets');
+  const filtered = q ? items.filter(i => (i.name + i.hashtags + (i.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase())) : items;
+  const grid = document.getElementById('lib-grid-hashtags');
+  const count = document.getElementById('lib-count-hashtags');
+  if (count) count.textContent = `${filtered.length} items`;
+  if (!grid) return;
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">#️⃣</div>${q ? 'No results found.' : 'No hashtag sets yet.'}</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(item => `
+    <div class="lib-card">
+      <div class="lib-card-name">${escHtml(item.name)}</div>
+      <div class="lib-card-content" style="color:var(--accent)">${escHtml(item.hashtags)}</div>
+      ${renderTags(item.tags)}
+      <div class="lib-card-meta">${fmtDate(item.createdAt)}</div>
+      <div class="lib-card-actions">
+        <button class="lib-btn-action" onclick="copyToClip('${escHtml(item.hashtags).replace(/'/g,"\\'")}')">📋 Copy</button>
+        <button class="lib-btn-action" onclick="openModal('hashtag', ${item.id})">✏️ Edit</button>
+        <button class="lib-btn-action danger" onclick="deleteLibItem('hashtagSets', ${item.id}, renderHashtags)">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+// ─── IMAGES ──────────────────────────────────────────────────────────────────
+async function renderImages(q = '') {
+  await initLibDB();
+  const items = await libGetAll('images');
+  const filtered = q ? items.filter(i => (i.name + (i.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase())) : items;
+  const grid = document.getElementById('lib-grid-images');
+  const count = document.getElementById('lib-count-images');
+  if (count) count.textContent = `${filtered.length} items`;
+  if (!grid) return;
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">🖼️</div>${q ? 'No results found.' : 'No images yet.'}</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(item => {
+    const thumb = item.dataUrl
+      ? `<img class="lib-img-thumb" src="${item.dataUrl}" alt="${escHtml(item.name)}">`
+      : `<div class="lib-img-placeholder">🖼️</div>`;
+    const size = item.size ? `${(item.size/1024).toFixed(1)} KB` : '';
+    return `
+      <div class="lib-card">
+        ${thumb}
+        <div class="lib-card-name">${escHtml(item.name)}</div>
+        ${renderTags(item.tags)}
+        <div class="lib-card-meta">${size} · ${fmtDate(item.createdAt)}</div>
+        <div class="lib-card-actions">
+          <button class="lib-btn-action" onclick="copyToClip('${escHtml(item.name).replace(/'/g,"\\'")}')">📋 Name</button>
+          <button class="lib-btn-action" onclick="openModal('image', ${item.id})">✏️ Edit</button>
+          <button class="lib-btn-action danger" onclick="deleteLibItem('images', ${item.id}, renderImages)">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─── COLLECTIONS ─────────────────────────────────────────────────────────────
+async function renderCollections(q = '') {
+  await initLibDB();
+  const items = await libGetAll('collections');
+  const filtered = q ? items.filter(i => i.name.toLowerCase().includes(q.toLowerCase())) : items;
+  const grid = document.getElementById('lib-grid-collections');
+  const count = document.getElementById('lib-count-collections');
+  if (count) count.textContent = `${filtered.length} items`;
+  if (!grid) return;
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="lib-empty"><div class="lib-empty-icon">📦</div>${q ? 'No results found.' : 'No collections yet.'}</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(item => {
+    const parts = [];
+    if (item.captionIds?.length) parts.push(`📝 ${item.captionIds.length} caption${item.captionIds.length>1?'s':''}`);
+    if (item.hashtagSetIds?.length) parts.push(`#️⃣ ${item.hashtagSetIds.length} set${item.hashtagSetIds.length>1?'s':''}`);
+    if (item.imageIds?.length) parts.push(`🖼️ ${item.imageIds.length} image${item.imageIds.length>1?'s':''}`);
+    return `
+      <div class="lib-card">
+        <div class="lib-card-name">${escHtml(item.name)}</div>
+        <div class="lib-card-content">${parts.join(' · ') || 'Empty collection'}</div>
+        ${item.description ? `<div class="lib-card-content" style="font-size:10px;">${escHtml(item.description)}</div>` : ''}
+        <div class="lib-card-meta">${fmtDate(item.createdAt)}</div>
+        <div class="lib-card-actions">
+          <button class="lib-btn-action" onclick="openModal('collection', ${item.id})">✏️ Edit</button>
+          <button class="lib-btn-action danger" onclick="deleteLibItem('collections', ${item.id}, renderCollections)">🗑️</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function deleteLibItem(store, id, refreshFn) {
+  if (!confirm('Delete this item?')) return;
+  await initLibDB();
+  await libDelete(store, id);
+  refreshFn();
+  showLibToast('Deleted');
+}
+
+// ─── MODAL SYSTEM ────────────────────────────────────────────────────────────
+async function openModal(type, editId = null) {
+  await initLibDB();
+  libModalType = type;
+  libEditId = editId;
+
+  const overlay = document.getElementById('libModal');
+  const title = document.getElementById('libModalTitle');
+  const body = document.getElementById('libModalBody');
+
+  const storeMap = { caption: 'captions', hashtag: 'hashtagSets', image: 'images', collection: 'collections' };
+  const labelMap = { caption: '📝 Caption', hashtag: '#️⃣ Hashtag Set', image: '🖼️ Image', collection: '📦 Collection' };
+
+  title.textContent = `${editId ? 'Edit' : 'Add'} ${labelMap[type]}`;
+
+  let existing = editId ? await libGet(storeMap[type], editId) : null;
+
+  if (type === 'caption') {
+    body.innerHTML = `
+      <div class="field"><label>Name / Title</label><input type="text" id="m-name" value="${escHtml(existing?.name || '')}" placeholder="e.g. แคปชั่นขายดีเดือนมิ.ย."></div>
+      <div class="field"><label>Caption Text</label><textarea id="m-content" style="min-height:140px;">${escHtml(existing?.content || '')}</textarea></div>
+      <div class="field"><label>Tags (comma separated)</label><input type="text" id="m-tags" value="${(existing?.tags||[]).join(', ')}" placeholder="ig, promotion, june"></div>`;
+  } else if (type === 'hashtag') {
+    body.innerHTML = `
+      <div class="field"><label>Set Name</label><input type="text" id="m-name" value="${escHtml(existing?.name || '')}" placeholder="e.g. TikTok Viral"></div>
+      <div class="field"><label>Hashtags</label><textarea id="m-content" style="min-height:120px;">${escHtml(existing?.hashtags || '')}</textarea></div>
+      <div class="field"><label>Tags (comma separated)</label><input type="text" id="m-tags" value="${(existing?.tags||[]).join(', ')}" placeholder="tiktok, viral"></div>`;
+  } else if (type === 'image') {
+    body.innerHTML = `
+      <div class="field"><label>Image Name</label><input type="text" id="m-name" value="${escHtml(existing?.name || '')}" placeholder="e.g. Product Banner June"></div>
+      ${existing?.dataUrl ? `<img src="${existing.dataUrl}" style="width:100%;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;">` : ''}
+      ${!editId ? `<div class="field"><label>Upload Image</label><input type="file" id="m-file" accept="image/*" style="color:var(--text);"></div>` : '<div style="font-size:10px;color:var(--text-muted);">To replace image, delete and re-upload.</div>'}
+      <div class="field" style="margin-top:10px;"><label>URL (optional, for param use)</label><input type="text" id="m-url" value="${escHtml(existing?.url || '')}" placeholder="https://..."></div>
+      <div class="field"><label>Tags (comma separated)</label><input type="text" id="m-tags" value="${(existing?.tags||[]).join(', ')}" placeholder="banner, june"></div>`;
+  } else if (type === 'collection') {
+    const captions = await libGetAll('captions');
+    const hashtags = await libGetAll('hashtagSets');
+    const images = await libGetAll('images');
+    const selCaps = existing?.captionIds || [];
+    const selHts = existing?.hashtagSetIds || [];
+    const selImgs = existing?.imageIds || [];
+
+    const mkOpts = (items, selIds) => items.map(i =>
+      `<option value="${i.id}" ${selIds.includes(i.id)?'selected':''}>${escHtml(i.name)}</option>`).join('');
+
+    body.innerHTML = `
+      <div class="field"><label>Collection Name</label><input type="text" id="m-name" value="${escHtml(existing?.name || '')}" placeholder="e.g. June Promotion Pack"></div>
+      <div class="field"><label>Description (optional)</label><input type="text" id="m-desc" value="${escHtml(existing?.description || '')}" placeholder="Short description..."></div>
+      <div class="field"><label>Captions (multi-select)</label><select id="m-captions" multiple style="min-height:90px;">${mkOpts(captions, selCaps)}</select></div>
+      <div class="field"><label>Hashtag Sets (multi-select)</label><select id="m-hashtags" multiple style="min-height:90px;">${mkOpts(hashtags, selHts)}</select></div>
+      <div class="field"><label>Images (multi-select)</label><select id="m-images" multiple style="min-height:90px;">${mkOpts(images, selImgs)}</select></div>
+      <div style="font-size:10px;color:var(--text-muted);">Hold Ctrl / Cmd to select multiple items.</div>`;
+  }
+
+  overlay.classList.add('show');
+  setTimeout(() => { const el = body.querySelector('input, textarea'); if (el) el.focus(); }, 100);
+}
+
+async function saveModalItem() {
+  await initLibDB();
+  const storeMap = { caption: 'captions', hashtag: 'hashtagSets', image: 'images', collection: 'collections' };
+  const store = storeMap[libModalType];
+
+  const name = document.getElementById('m-name')?.value.trim();
+  if (!name) { alert('Please enter a name.'); return; }
+
+  const parseTags = (str) => str ? str.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  let data = libEditId ? await libGet(store, libEditId) : {};
+  data.name = name;
+
+  if (libModalType === 'caption') {
+    data.content = document.getElementById('m-content')?.value || '';
+    data.tags = parseTags(document.getElementById('m-tags')?.value);
+  } else if (libModalType === 'hashtag') {
+    data.hashtags = document.getElementById('m-content')?.value || '';
+    data.tags = parseTags(document.getElementById('m-tags')?.value);
+  } else if (libModalType === 'image') {
+    data.url = document.getElementById('m-url')?.value || '';
+    data.tags = parseTags(document.getElementById('m-tags')?.value);
+
+    const fileInput = document.getElementById('m-file');
+    if (fileInput?.files[0]) {
+      const file = fileInput.files[0];
+      data.mimeType = file.type;
+      data.size = file.size;
+      const dataUrl = await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+      data.dataUrl = dataUrl;
+    }
+  } else if (libModalType === 'collection') {
+    data.description = document.getElementById('m-desc')?.value || '';
+    const getSelIds = (id) => Array.from(document.getElementById(id)?.selectedOptions || []).map(o => parseInt(o.value));
+    data.captionIds = getSelIds('m-captions');
+    data.hashtagSetIds = getSelIds('m-hashtags');
+    data.imageIds = getSelIds('m-images');
+  }
+
+  if (libEditId) {
+    await libPut(store, data);
+  } else {
+    await libAdd(store, data);
+  }
+
+  closeModal('libModal');
+  showLibToast(libEditId ? 'Updated!' : 'Saved!');
+
+  const refreshMap = { captions: renderCaptions, hashtagSets: renderHashtags, images: renderImages, collections: renderCollections };
+  refreshMap[store]?.();
+  libEditId = null;
+  libModalType = null;
+}
+
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('show');
+}
+
+// ─── PICK MODAL ──────────────────────────────────────────────────────────────
+async function openPickModal(targetInputId, type) {
+  await initLibDB();
+  pickTargetId = targetInputId;
+  pickTargetType = type;
+
+  const storeMap = { caption: 'captions', hashtag: 'hashtagSets' };
+  const labelMap = { caption: '📝 Pick Caption', hashtag: '#️⃣ Pick Hashtag Set' };
+  document.getElementById('pickModalTitle').textContent = labelMap[type] || 'Pick from Library';
+
+  pickAllItems = await libGetAll(storeMap[type]);
+  renderPickList(pickAllItems);
+  document.getElementById('pickModal').classList.add('show');
+  const si = document.querySelector('#pickModal .lib-search');
+  if (si) { si.value = ''; si.focus(); }
+}
+
+function renderPickList(items) {
+  const list = document.getElementById('pickModalList');
+  if (!items.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:11px;">Library is empty. Add items first.</div>';
+    return;
+  }
+  list.innerHTML = items.map(item => {
+    const preview = pickTargetType === 'hashtag' ? item.hashtags : item.content;
+    return `<div class="lib-pick-item" onclick="applyPick(${item.id})">
+      <div class="lib-pick-item-name">${escHtml(item.name)}</div>
+      <div class="lib-pick-item-preview">${escHtml(preview || '')}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterPickList(q) {
+  const filtered = q ? pickAllItems.filter(i => (i.name + (i.content || i.hashtags || '') + (i.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase())) : pickAllItems;
+  renderPickList(filtered);
+}
+
+async function applyPick(id) {
+  await initLibDB();
+  const storeMap = { caption: 'captions', hashtag: 'hashtagSets' };
+  const item = await libGet(storeMap[pickTargetType], id);
+  if (!item) return;
+
+  const el = document.getElementById(pickTargetId);
+  if (el) {
+    el.value = pickTargetType === 'hashtag' ? item.hashtags : item.content;
+    el.dispatchEvent(new Event('input'));
+  }
+  closeModal('pickModal');
+  showLibToast(`"${item.name}" applied ✓`);
+}
+
+// ─── TOAST (Library) ─────────────────────────────────────────────────────────
+function showLibToast(msg, type = 'success') {
+  if (typeof showToast === 'function') { showToast(msg, type); return; }
+  const c = document.getElementById('toast-container');
+  if (!c) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('fade-out'); setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+// ─── COPY TO CLIPBOARD ───────────────────────────────────────────────────────
+function copyToClip(text) {
+  navigator.clipboard.writeText(text).then(() => showLibToast('Copied!'));
+}
+
 (function init() {
   const now = new Date();
   now.setMinutes(now.getMinutes() + 5);
@@ -1903,8 +2777,9 @@ function generateJson() {
   updateScriptSelector(); // Populate the dropdown
   loadAllInputs(); // Load saved data first
   renderPresets();
-  addLog('info', 'GemRunner Ready (Configuration restored).');
+  initLibDB().then(() => addLog('info', 'GemRunner Ready (Library DB initialized).'));
 })();
+
 
 function saveAllInputs() {
   const inputs = {
