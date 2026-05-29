@@ -1946,8 +1946,15 @@ function renderScriptParameters() {
         btnHashtag.title = 'Pick from Hashtag Library';
         btnHashtag.onclick = (e) => { e.preventDefault(); openPickModal(`sp-${param.name}`, 'hashtag'); };
 
+        const btnImage = document.createElement('button');
+        btnImage.className = 'param-pick-btn';
+        btnImage.textContent = '🖼️ Image';
+        btnImage.title = 'Pick from Image Library';
+        btnImage.onclick = (e) => { e.preventDefault(); openPickModal(`sp-${param.name}`, 'image'); };
+
         wrapper.appendChild(btnCaption);
         wrapper.appendChild(btnHashtag);
+        wrapper.appendChild(btnImage);
         fieldDiv.appendChild(wrapper);
       } else {
         fieldDiv.appendChild(input);
@@ -2807,11 +2814,16 @@ async function openPickModal(targetInputId, type) {
   pickTargetId = targetInputId;
   pickTargetType = type;
 
-  const storeMap = { caption: 'captions', hashtag: 'hashtagSets' };
-  const labelMap = { caption: '📝 Pick Caption', hashtag: '#️⃣ Pick Hashtag Set' };
+  const labelMap = { caption: '📝 Pick Caption', hashtag: '#️⃣ Pick Hashtag Set', image: '🖼️ Pick Image' };
   document.getElementById('pickModalTitle').textContent = labelMap[type] || 'Pick from Library';
 
+  const storeMap = { caption: 'captions', hashtag: 'hashtagSets', image: 'images' };
   pickAllItems = await libGetAll(storeMap[type]);
+
+  // Show/hide format bar (images don't use line/pipe splitting)
+  const optsEl = document.querySelector('.pick-opts');
+  if (optsEl) optsEl.style.display = type === 'image' ? 'none' : '';
+
   renderPickList(pickAllItems);
   document.getElementById('pickModal').classList.add('show');
   const si = document.querySelector('#pickModal .lib-search');
@@ -2819,6 +2831,10 @@ async function openPickModal(targetInputId, type) {
 }
 
 function getChunks(item) {
+  if (pickTargetType === 'image') {
+    // Images: return url if set, otherwise name
+    return [item.url || item.name || ''];
+  }
   const raw = pickTargetType === 'hashtag' ? item.hashtags : item.content;
   if (!raw) return [];
   if (pickOpts.fmt === 'pipe') {
@@ -2835,6 +2851,22 @@ function renderPickList(items) {
     return;
   }
   list.innerHTML = items.map(item => {
+    // Image cards: show thumbnail + name + URL
+    if (pickTargetType === 'image') {
+      const thumb = item.dataUrl
+        ? `<img src="${item.dataUrl}" style="width:100%;height:70px;object-fit:cover;border-radius:5px;margin-bottom:6px;border:1px solid var(--border);">`
+        : `<div style="width:100%;height:40px;display:flex;align-items:center;justify-content:center;font-size:22px;">🖼️</div>`;
+      const urlLabel = item.url ? `<div class="lib-pick-item-chunks">🔗 ${escHtml(item.url)}</div>` : '';
+      const seqKey = `image-${item.id}`;
+      const curIdx = (pickSeqIndex[seqKey] || 0);
+      const seqBadge = pickOpts.mode === 'seq' ? `<span class="pick-seq-badge">#${curIdx + 1}</span>` : '';
+      return `<div class="lib-pick-item" onclick="applyPick(${item.id})">
+        ${thumb}
+        <div class="lib-pick-item-name">${escHtml(item.name)}${seqBadge}</div>
+        ${urlLabel}
+      </div>`;
+    }
+
     const chunks = getChunks(item);
     const seqKey = `${pickTargetType}-${item.id}`;
     const curIdx = (pickSeqIndex[seqKey] || 0) % Math.max(chunks.length, 1);
@@ -2878,7 +2910,14 @@ async function applyPick(id) {
   const chunks = getChunks(item);
   let picked = '';
 
-  if (!chunks.length) {
+  if (pickTargetType === 'image') {
+    // For images: insert url if available, else name. Sequential just tracks usage order.
+    const seqKey = `image-${id}`;
+    picked = item.url || item.name || '';
+    if (pickOpts.mode === 'seq') {
+      pickSeqIndex[seqKey] = (pickSeqIndex[seqKey] || 0) + 1;
+    }
+  } else if (!chunks.length) {
     picked = '';
   } else if (chunks.length === 1) {
     picked = chunks[0];
@@ -2887,7 +2926,6 @@ async function applyPick(id) {
     if (pickOpts.mode === 'random') {
       picked = chunks[Math.floor(Math.random() * chunks.length)];
     } else {
-      // Sequential
       const idx = (pickSeqIndex[seqKey] || 0) % chunks.length;
       picked = chunks[idx];
       pickSeqIndex[seqKey] = idx + 1;
